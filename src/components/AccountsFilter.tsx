@@ -249,17 +249,17 @@ export default function AccountsFilter({
 
   return (
     <>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Hae tilejä..."
           className="flex-1"
         />
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => setTypeFilter(null)}
-            className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+            className={`px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
               typeFilter === null
                 ? 'bg-accent-muted text-accent-light'
                 : 'text-text-muted hover:text-text-primary hover:bg-surface-3/60'
@@ -271,7 +271,7 @@ export default function AccountsFilter({
             <button
               key={t}
               onClick={() => setTypeFilter(typeFilter === t ? null : t)}
-              className={`px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
                 typeFilter === t
                   ? 'bg-accent-muted text-accent-light'
                   : 'text-text-muted hover:text-text-primary hover:bg-surface-3/60'
@@ -397,8 +397,9 @@ export default function AccountsFilter({
                               onClick={() =>
                                 setModal({ kind: 'edit', account: acc })
                               }
-                              className="rounded p-1 text-text-muted transition hover:bg-surface-3/80 hover:text-text-primary"
+                              className="rounded p-2 text-text-muted transition hover:bg-surface-3/80 hover:text-text-primary"
                               title="Muokkaa"
+                              aria-label="Muokkaa tiliä"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -406,8 +407,9 @@ export default function AccountsFilter({
                               onClick={() =>
                                 setModal({ kind: 'clone', account: acc })
                               }
-                              className="rounded p-1 text-text-muted transition hover:bg-surface-3/80 hover:text-text-primary"
+                              className="rounded p-2 text-text-muted transition hover:bg-surface-3/80 hover:text-text-primary"
                               title="Kloonaa"
+                              aria-label="Kloonaa tili"
                             >
                               <Copy className="h-3.5 w-3.5" />
                             </button>
@@ -416,8 +418,9 @@ export default function AccountsFilter({
                                 setDeleteTarget(acc);
                                 setDeleteError(null);
                               }}
-                              className="rounded p-1 text-text-muted transition hover:bg-error/10 hover:text-error"
+                              className="rounded p-2 text-text-muted transition hover:bg-error/10 hover:text-error"
                               title="Poista"
+                              aria-label="Poista tili"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>

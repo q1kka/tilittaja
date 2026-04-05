@@ -26,6 +26,8 @@ export default function DataSourceSelector({
         Tietokanta
       </label>
       <select
+        id="datasource-select"
+        aria-label="Tietokanta"
         value={currentSource}
         onChange={handleChange}
         className="w-full bg-surface-2 border border-border-subtle text-text-primary text-xs rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-accent/40 focus:border-accent/40 cursor-pointer transition-colors hover:border-border-medium outline-none"

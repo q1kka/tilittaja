@@ -347,13 +347,15 @@ export default function BankStatementsList({ statements }: Props) {
           <thead>
             <tr className="border-b border-border-subtle">
               <th className="w-10 px-3 py-2 text-center">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleAll}
-                  aria-label="Valitse kaikki tiliotteet"
-                  className="h-4 w-4"
-                />
+                <label className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleAll}
+                    aria-label="Valitse kaikki tiliotteet"
+                    className="h-4 w-4"
+                  />
+                </label>
               </th>
               <th className="text-left text-[10px] font-semibold text-text-muted uppercase tracking-[0.15em] px-3 py-2">
                 Kausi
@@ -388,13 +390,15 @@ export default function BankStatementsList({ statements }: Props) {
                   className="hover:bg-surface-3/40 transition-colors"
                 >
                   <td className="px-3 py-1.5 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(statement.id)}
-                      onChange={() => toggleSelection(statement.id)}
-                      aria-label={`Valitse tiliote ${statementPeriodLabel}`}
-                      className="h-4 w-4"
-                    />
+                    <label className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(statement.id)}
+                        onChange={() => toggleSelection(statement.id)}
+                        aria-label={`Valitse tiliote ${statementPeriodLabel}`}
+                        className="h-4 w-4"
+                      />
+                    </label>
                   </td>
                   <td className="px-3 py-1.5">
                     <Link

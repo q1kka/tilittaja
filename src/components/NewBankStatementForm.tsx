@@ -193,10 +193,17 @@ export default function NewBankStatementForm({ accounts }: Props) {
   };
 
   return (
-    <div className="p-8 max-w-4xl">
+    <form
+      className="p-8 max-w-4xl"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!saving && bankAccountId && validEntryCount > 0)
+          void handleSave();
+      }}
+    >
       <Link
         href="/bank-statements"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+        className="mb-6 inline-flex min-h-[32px] items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
         Takaisin tilioteisiin
@@ -241,10 +248,11 @@ export default function NewBankStatementForm({ accounts }: Props) {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-text-secondary">
+          <label htmlFor="bs-iban" className="mb-2 block text-sm font-medium text-text-secondary">
             IBAN
           </label>
           <input
+            id="bs-iban"
             type="text"
             value={iban}
             onChange={(e) => setIban(e.target.value)}
@@ -255,10 +263,11 @@ export default function NewBankStatementForm({ accounts }: Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-text-secondary">
+            <label htmlFor="bs-period-start" className="mb-2 block text-sm font-medium text-text-secondary">
               Kausi alkaa
             </label>
             <input
+              id="bs-period-start"
               type="date"
               value={periodStart}
               onChange={(e) => setPeriodStart(e.target.value)}
@@ -266,10 +275,11 @@ export default function NewBankStatementForm({ accounts }: Props) {
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-text-secondary">
+            <label htmlFor="bs-period-end" className="mb-2 block text-sm font-medium text-text-secondary">
               Kausi päättyy
             </label>
             <input
+              id="bs-period-end"
               type="date"
               value={periodEnd}
               onChange={(e) => setPeriodEnd(e.target.value)}
@@ -280,10 +290,11 @@ export default function NewBankStatementForm({ accounts }: Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-text-secondary">
+            <label htmlFor="bs-opening-balance" className="mb-2 block text-sm font-medium text-text-secondary">
               Alkusaldo
             </label>
             <input
+              id="bs-opening-balance"
               type="text"
               inputMode="decimal"
               value={openingBalance}
@@ -293,10 +304,11 @@ export default function NewBankStatementForm({ accounts }: Props) {
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium text-text-secondary">
+            <label htmlFor="bs-closing-balance" className="mb-2 block text-sm font-medium text-text-secondary">
               Loppusaldo
             </label>
             <input
+              id="bs-closing-balance"
               type="text"
               inputMode="decimal"
               value={closingBalance}
@@ -338,6 +350,7 @@ export default function NewBankStatementForm({ accounts }: Props) {
                     type="date"
                     value={row.date}
                     onChange={(e) => updateRow(index, 'date', e.target.value)}
+                    aria-label="Tapahtumapäivä"
                     className="rounded border border-border-subtle bg-surface-0/60 px-2.5 py-1.5 text-sm text-text-primary outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
                   />
                 </td>
@@ -369,7 +382,7 @@ export default function NewBankStatementForm({ accounts }: Props) {
                     onClick={() =>
                       updateRow(index, 'isDeposit', !row.isDeposit)
                     }
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors ${
                       row.isDeposit
                         ? 'bg-green-400/10 text-emerald-400 hover:bg-green-400/20'
                         : 'bg-red-400/10 text-rose-400 hover:bg-red-400/20'
@@ -394,8 +407,9 @@ export default function NewBankStatementForm({ accounts }: Props) {
                   <button
                     type="button"
                     onClick={() => removeRow(index)}
-                    className="text-text-muted transition-colors hover:text-rose-400"
+                    className="rounded p-2 text-text-muted transition-colors hover:text-rose-400"
                     disabled={rows.length <= 1}
+                    aria-label="Poista rivi"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -409,7 +423,7 @@ export default function NewBankStatementForm({ accounts }: Props) {
                 <button
                   type="button"
                   onClick={addRow}
-                  className="flex items-center gap-1 text-sm text-accent transition-colors hover:text-accent-light"
+                  className="flex min-h-[32px] items-center gap-1 text-sm text-accent transition-colors hover:text-accent-light"
                 >
                   <Plus className="h-4 w-4" />
                   Lisää rivi
@@ -440,8 +454,7 @@ export default function NewBankStatementForm({ accounts }: Props) {
             : `${validEntryCount} rivi${validEntryCount === 1 ? '' : 'ä'}`}
         </div>
         <button
-          type="button"
-          onClick={() => void handleSave()}
+          type="submit"
           disabled={saving || !bankAccountId || validEntryCount === 0}
           className="rounded-lg bg-accent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:bg-surface-3 disabled:text-text-muted"
         >
@@ -471,6 +484,6 @@ export default function NewBankStatementForm({ accounts }: Props) {
           }
         />
       )}
-    </div>
+    </form>
   );
 }

@@ -17,8 +17,11 @@ import {
 } from '@/lib/receipt-resolution';
 import { resolveDocumentLabels } from '@/lib/document-labels';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Päiväkirja – Tilittaja' };
 
 export default async function JournalPage({
   searchParams,
@@ -165,7 +168,7 @@ export default async function JournalPage({
     });
 
   return (
-    <div className="max-w-6xl p-5">
+    <div className="max-w-6xl overflow-x-auto p-5">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">
@@ -181,7 +184,7 @@ export default async function JournalPage({
 
         <a
           href={`/api/reports/materials/pdf?period=${period.id}&kind=paivakirja`}
-          className="text-sm text-accent underline hover:text-accent-light"
+          className="inline-flex min-h-[32px] items-center text-sm text-accent underline hover:text-accent-light"
         >
           Lataa PDF
         </a>

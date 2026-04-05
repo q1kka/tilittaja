@@ -9,8 +9,11 @@ import {
 import BankStatementsList from '@/components/BankStatementsList';
 import { periodLabel } from '@/lib/accounting';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tiliotteet – Tilittaja' };
 
 export default async function BankStatementsPage({
   searchParams,
@@ -49,7 +52,7 @@ export default async function BankStatementsPage({
         </div>
         <Link
           href="/bank-statements/new"
-          className="flex items-center gap-1.5 bg-accent hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          className="flex items-center gap-1.5 bg-accent hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           Lisää tiliote

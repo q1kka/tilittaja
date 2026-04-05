@@ -53,7 +53,7 @@ export function SortableHeader<K extends string>({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className={`flex w-full items-center gap-1 bg-transparent text-inherit ${
+        className={`flex w-full items-center gap-1 bg-transparent text-inherit min-h-[32px] ${
           align === 'right'
             ? 'justify-end text-right'
             : 'justify-start text-left'

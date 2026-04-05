@@ -9,6 +9,9 @@ interface Props {
   section?: 'general' | 'meeting';
 }
 
+const fieldClass =
+  'w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20';
+
 export default function TilinpaatosMetadataEditor({
   initialMetadata,
   section = 'general',
@@ -43,27 +46,35 @@ export default function TilinpaatosMetadataEditor({
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-meetingDate"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Kokouspäivä (vvvv-kk-pp)
               </label>
               <input
+                id="tp-meetingDate"
                 value={form.meetingDate}
                 onChange={(event) =>
                   setField('meetingDate', event.target.value)
                 }
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-dischargeTarget"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Vastuuvapaus myönnetään
               </label>
               <select
+                id="tp-dischargeTarget"
                 value={form.dischargeTarget}
                 onChange={(event) =>
                   setField('dischargeTarget', event.target.value)
                 }
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               >
                 <option value="board-and-ceo">
                   Hallitukselle ja toimitusjohtajalle
@@ -74,15 +85,19 @@ export default function TilinpaatosMetadataEditor({
             </div>
           </div>
           <div>
-            <label className="block text-sm text-text-secondary mb-1">
+            <label
+              htmlFor="tp-attendees"
+              className="block text-sm text-text-secondary mb-1"
+            >
               Läsnä (esim. &quot;Matti Meikäläinen omistaen yhtiön koko
               osakekannan.&quot;)
             </label>
             <textarea
+              id="tp-attendees"
               value={form.attendees}
               onChange={(event) => setField('attendees', event.target.value)}
               rows={2}
-              className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+              className={fieldClass}
             />
           </div>
         </div>
@@ -90,134 +105,178 @@ export default function TilinpaatosMetadataEditor({
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-place"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Paikka
               </label>
               <input
+                id="tp-place"
                 value={form.place}
                 onChange={(event) => setField('place', event.target.value)}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-signatureDate"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Päiväys (vvvv-kk-pp)
               </label>
               <input
+                id="tp-signatureDate"
                 value={form.signatureDate}
                 onChange={(event) =>
                   setField('signatureDate', event.target.value)
                 }
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-preparedBy"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Laatija
               </label>
               <input
+                id="tp-preparedBy"
                 value={form.preparedBy}
                 onChange={(event) => setField('preparedBy', event.target.value)}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-signerName"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Allekirjoittaja
               </label>
               <input
+                id="tp-signerName"
                 value={form.signerName}
                 onChange={(event) => setField('signerName', event.target.value)}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-signerTitle"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Allekirjoittajan rooli
               </label>
               <input
+                id="tp-signerTitle"
                 value={form.signerTitle}
                 onChange={(event) =>
                   setField('signerTitle', event.target.value)
                 }
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-personnelCount"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Henkilöstön määrä
               </label>
               <input
+                id="tp-personnelCount"
                 value={form.personnelCount}
                 onChange={(event) =>
                   setField('personnelCount', event.target.value)
                 }
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
           </div>
 
           <div className="mt-4 space-y-4">
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-microDeclaration"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Mikroyrityslausuma
               </label>
               <textarea
+                id="tp-microDeclaration"
                 value={form.microDeclaration}
                 onChange={(event) =>
                   setField('microDeclaration', event.target.value)
                 }
                 rows={3}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-boardProposal"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Hallituksen ehdotus
               </label>
               <textarea
+                id="tp-boardProposal"
                 value={form.boardProposal}
                 onChange={(event) =>
                   setField('boardProposal', event.target.value)
                 }
                 rows={3}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-parentCompany"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Konsernin emoyhtiö
               </label>
               <input
+                id="tp-parentCompany"
                 value={form.parentCompany}
                 onChange={(event) =>
                   setField('parentCompany', event.target.value)
                 }
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-shareInfo"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Osaketiedot
               </label>
               <textarea
+                id="tp-shareInfo"
                 value={form.shareInfo}
                 onChange={(event) => setField('shareInfo', event.target.value)}
                 rows={2}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
             <div>
-              <label className="block text-sm text-text-secondary mb-1">
+              <label
+                htmlFor="tp-archiveNote"
+                className="block text-sm text-text-secondary mb-1"
+              >
                 Arkistointimuistio
               </label>
               <textarea
+                id="tp-archiveNote"
                 value={form.archiveNote}
                 onChange={(event) =>
                   setField('archiveNote', event.target.value)
                 }
                 rows={2}
-                className="w-full bg-surface-0/60 border border-border-subtle text-text-primary rounded-lg px-3 py-2 text-sm outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+                className={fieldClass}
               />
             </div>
           </div>

@@ -56,6 +56,16 @@ export default function VatWorkspace({
   vatSettlement,
   vatDocuments,
 }: Props) {
+  const sectionEyebrowClass =
+    'mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted';
+  const fieldLabelClass =
+    'mb-2 block text-[11px] font-medium uppercase tracking-[0.15em] text-text-muted';
+  const summaryLabelClass =
+    'text-[11px] font-medium uppercase tracking-[0.15em] text-text-muted';
+  const tableHeadClass =
+    'px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted';
+  const tableHeadRightClass = `${tableHeadClass} text-right`;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [vatDate, setVatDate] = useState(() =>
@@ -120,7 +130,7 @@ export default function VatWorkspace({
   return (
     <div className="w-full max-w-[1400px] p-5">
       <div className="mb-6">
-        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">
+        <p className={sectionEyebrowClass}>
           Kirjanpito
         </p>
         <h1 className="text-xl font-semibold tracking-tight text-text-primary">
@@ -129,75 +139,85 @@ export default function VatWorkspace({
         <p className="mt-1 text-sm text-text-secondary">{periodLabel}</p>
       </div>
 
-      <div className="mb-6 card-panel p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-          <div>
-            <span className="mb-1 block text-[10px] font-medium uppercase tracking-[0.15em] text-text-muted">
-              Ilmoitusjakson alku
-            </span>
-            <input
-              type="date"
-              defaultValue={getDateInputValue(reportStartDate)}
-              min={getDateInputValue(periodStart)}
-              max={getDateInputValue(periodEnd)}
-              onChange={(e) => {
-                const ts = parseDateInputValue(e.target.value);
-                if (ts != null) updateDateRange(ts, null);
-              }}
-              className="w-full rounded-lg border border-border-subtle bg-surface-0/60 px-3 py-2 text-sm text-text-primary outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20 sm:w-44"
-            />
+      <div className="mb-6 card-panel p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(2,minmax(0,220px))_auto] xl:items-end">
+            <div>
+              <label htmlFor="vat-start-date" className={fieldLabelClass}>
+                Ilmoitusjakson alku
+              </label>
+              <input
+                id="vat-start-date"
+                type="date"
+                defaultValue={getDateInputValue(reportStartDate)}
+                min={getDateInputValue(periodStart)}
+                max={getDateInputValue(periodEnd)}
+                onChange={(e) => {
+                  const ts = parseDateInputValue(e.target.value);
+                  if (ts != null) updateDateRange(ts, null);
+                }}
+                className="w-full rounded-lg border border-border-subtle bg-surface-0/60 px-3 py-2 text-sm text-text-primary outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+              />
+            </div>
+            <div>
+              <label htmlFor="vat-end-date" className={fieldLabelClass}>
+                Ilmoitusjakson loppu
+              </label>
+              <input
+                id="vat-end-date"
+                type="date"
+                defaultValue={getDateInputValue(reportEndDate)}
+                min={getDateInputValue(periodStart)}
+                max={getDateInputValue(periodEnd)}
+                onChange={(e) => {
+                  const ts = parseDateInputValue(e.target.value);
+                  if (ts != null) updateDateRange(null, ts);
+                }}
+                className="w-full rounded-lg border border-border-subtle bg-surface-0/60 px-3 py-2 text-sm text-text-primary outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+              />
+            </div>
+            <div>
+              <div className={fieldLabelClass}>Nopea rajaus</div>
+              <div className="flex flex-wrap gap-2">
+                {[1, 3, 12].map((months) => {
+                  const label =
+                    months === 1
+                      ? 'Kuukausi'
+                      : months === 3
+                        ? 'Neljännes'
+                        : 'Koko kausi';
+                  return (
+                    <button
+                      key={months}
+                      type="button"
+                      onClick={() => {
+                        if (months === 12) {
+                          updateDateRange(periodStart, periodEnd);
+                        } else {
+                          const end = new Date(reportStartDate);
+                          end.setUTCMonth(end.getUTCMonth() + months);
+                          end.setUTCDate(end.getUTCDate() - 1);
+                          const endTs = end.getTime();
+                          updateDateRange(
+                            reportStartDate,
+                            Math.min(endTs, periodEnd),
+                          );
+                        }
+                      }}
+                      className="rounded-lg border border-border-subtle bg-surface-1/60 px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <div>
-            <span className="mb-1 block text-[10px] font-medium uppercase tracking-[0.15em] text-text-muted">
-              Ilmoitusjakson loppu
-            </span>
-            <input
-              type="date"
-              defaultValue={getDateInputValue(reportEndDate)}
-              min={getDateInputValue(periodStart)}
-              max={getDateInputValue(periodEnd)}
-              onChange={(e) => {
-                const ts = parseDateInputValue(e.target.value);
-                if (ts != null) updateDateRange(null, ts);
-              }}
-              className="w-full rounded-lg border border-border-subtle bg-surface-0/60 px-3 py-2 text-sm text-text-primary outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20 sm:w-44"
-            />
-          </div>
-          <div className="flex gap-2">
-            {[1, 3, 12].map((months) => {
-              const label =
-                months === 1
-                  ? 'Kuukausi'
-                  : months === 3
-                    ? 'Neljännes'
-                    : 'Koko kausi';
-              return (
-                <button
-                  key={months}
-                  type="button"
-                  onClick={() => {
-                    if (months === 12) {
-                      updateDateRange(periodStart, periodEnd);
-                    } else {
-                      const end = new Date(reportStartDate);
-                      end.setUTCMonth(end.getUTCMonth() + months);
-                      end.setUTCDate(end.getUTCDate() - 1);
-                      const endTs = end.getTime();
-                      updateDateRange(
-                        reportStartDate,
-                        Math.min(endTs, periodEnd),
-                      );
-                    }
-                  }}
-                  className="rounded-lg border border-border-subtle bg-surface-1/60 px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-1 hover:text-text-primary"
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="text-sm text-text-muted sm:ml-auto">
-            {formatDate(reportStartDate)} – {formatDate(reportEndDate)}
+          <div className="rounded-xl border border-border-subtle bg-surface-0/35 px-4 py-3 lg:min-w-[240px]">
+            <div className={summaryLabelClass}>Valittu aikavali</div>
+            <div className="mt-1 text-sm font-medium text-text-primary">
+              {formatDate(reportStartDate)} – {formatDate(reportEndDate)}
+            </div>
           </div>
         </div>
       </div>
@@ -206,13 +226,13 @@ export default function VatWorkspace({
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">
+              <p className={sectionEyebrowClass}>
                 ALV-ilmoitus
               </p>
-              <h2 className="text-xl font-semibold tracking-tight text-text-primary">
+              <h2 className="text-lg font-semibold tracking-tight text-text-primary">
                 ALV-ilmoitus ja tilitys
               </h2>
-              <p className="mt-1 text-sm text-text-secondary">
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-text-secondary">
                 Muodosta ALV-tositteesta nollausvienti, joka siirtää ALV-tilien
                 saldot yhdelle tilitysvelan tai saamisen tilille.
               </p>
@@ -233,42 +253,42 @@ export default function VatWorkspace({
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-lg border border-border-subtle bg-surface-1/70 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-widest text-text-muted">
+              <div className={summaryLabelClass}>
                 Verollinen myynti
               </div>
-              <div className="mt-1 font-mono text-lg text-text-primary">
+              <div className="mt-1 font-mono text-xl text-text-primary">
                 {formatCurrency(vatReport.totals.salesBase)}
               </div>
             </div>
             <div className="rounded-lg border border-border-subtle bg-surface-1/70 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-widest text-text-muted">
+              <div className={summaryLabelClass}>
                 Verolliset ostot
               </div>
-              <div className="mt-1 font-mono text-lg text-text-primary">
+              <div className="mt-1 font-mono text-xl text-text-primary">
                 {formatCurrency(vatReport.totals.purchaseBase)}
               </div>
             </div>
             <div className="rounded-lg border border-border-subtle bg-surface-1/70 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-widest text-text-muted">
+              <div className={summaryLabelClass}>
                 Suoritettava ALV
               </div>
-              <div className="mt-1 font-mono text-lg text-text-primary">
+              <div className="mt-1 font-mono text-xl text-text-primary">
                 {formatCurrency(vatReport.totals.outputVat)}
               </div>
             </div>
             <div className="rounded-lg border border-border-subtle bg-surface-1/70 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-widest text-text-muted">
+              <div className={summaryLabelClass}>
                 Vähennettävä ALV
               </div>
-              <div className="mt-1 font-mono text-lg text-text-primary">
+              <div className="mt-1 font-mono text-xl text-text-primary">
                 {formatCurrency(vatReport.totals.deductibleVat)}
               </div>
             </div>
             <div className="rounded-lg border border-border-subtle bg-surface-1/70 px-4 py-3">
-              <div className="text-[11px] uppercase tracking-widest text-text-muted">
+              <div className={summaryLabelClass}>
                 {vatReport.totals.payableVat > 0 ? 'Maksettavaa' : 'Saatavaa'}
               </div>
-              <div className="mt-1 font-mono text-lg text-text-primary">
+              <div className="mt-1 font-mono text-xl text-text-primary">
                 {formatCurrency(
                   vatReport.totals.payableVat > 0
                     ? vatReport.totals.payableVat
@@ -281,10 +301,10 @@ export default function VatWorkspace({
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="rounded-lg border border-border-subtle bg-surface-1/60 overflow-hidden">
               <div className="border-b border-border-subtle px-4 py-3">
-                <h3 className="text-sm font-semibold text-text-primary">
+                <h3 className="text-base font-semibold text-text-primary">
                   Tilit, jotka nollataan
                 </h3>
-                <p className="mt-1 text-sm text-text-secondary">
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
                   Muodostuksessa jokainen ALV-tili nollataan ja nettosumma
                   kirjataan tilille{' '}
                   <span className="font-mono text-text-primary">
@@ -300,16 +320,16 @@ export default function VatWorkspace({
                 <table className="w-full min-w-[520px]">
                   <thead className="bg-surface-1/80">
                     <tr className="border-b border-border-subtle/70">
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                      <th className={tableHeadClass}>
                         Tili
                       </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                      <th className={tableHeadClass}>
                         Nimi
                       </th>
-                      <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                      <th className={tableHeadRightClass}>
                         Nykyinen saldo
                       </th>
-                      <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                      <th className={tableHeadRightClass}>
                         Nollausvienti
                       </th>
                     </tr>
@@ -349,10 +369,10 @@ export default function VatWorkspace({
 
             <div className="rounded-lg border border-border-subtle bg-surface-1/60 p-4">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-text-primary">
+                <h3 className="text-base font-semibold text-text-primary">
                   Muodosta ALV-tosite
                 </h3>
-                <p className="mt-1 text-sm text-text-secondary">
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
                   Tosite siirtää ALV-tilien saldon tilille{' '}
                   <span className="font-mono text-text-primary">
                     {vatSettlement?.settlementAccountNumber ?? '2939'}
@@ -361,8 +381,8 @@ export default function VatWorkspace({
                 </p>
               </div>
 
-              <label className="relative mb-4 block">
-                <span className="mb-1 block text-[10px] font-medium uppercase tracking-[0.15em] text-text-muted">
+              <label className="relative mb-4 block text-[11px] font-medium uppercase tracking-[0.15em] text-text-muted">
+                <span className="mb-2 block">
                   Päiväys
                 </span>
                 <input
@@ -371,7 +391,7 @@ export default function VatWorkspace({
                   onChange={(event) => setVatDate(event.target.value)}
                   className="w-full rounded-lg border border-border-subtle bg-surface-0/60 px-3 py-2 text-sm text-text-primary outline-none transition focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
                 />
-                <CalendarDays className="pointer-events-none absolute right-3 top-[34px] h-4 w-4 text-text-muted" />
+                <CalendarDays className="pointer-events-none absolute right-3 top-[38px] h-4 w-4 text-text-muted" />
               </label>
 
               {vatSettlement ? (
@@ -421,10 +441,11 @@ export default function VatWorkspace({
 
       <section className="mt-6 card-panel">
         <div className="border-b border-border-subtle px-5 py-4">
+          <p className={sectionEyebrowClass}>ALV-tositteet</p>
           <h2 className="text-lg font-semibold text-text-primary">
             Laaditut ALV-ilmoitukset
           </h2>
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="mt-1 text-sm leading-6 text-text-secondary">
             Valitulle tilikaudelle jo muodostetut ALV-tositteet.
           </p>
         </div>
@@ -438,7 +459,7 @@ export default function VatWorkspace({
               <div className="border-b border-border-subtle px-4 py-3">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-text-primary">
+                    <div className="text-base font-semibold text-text-primary">
                       {document.name || 'ALV-ilmoitus'}
                     </div>
                     <div className="mt-1 text-sm text-text-secondary">
@@ -451,13 +472,13 @@ export default function VatWorkspace({
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] uppercase tracking-[0.15em] text-text-muted">
+                    <span className={summaryLabelClass}>
                       {document.entries.length} vientiriviä
                     </span>
                     <DeleteDocumentButton
                       documentId={document.id}
                       documentCode={`${document.number}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-700/40 bg-red-900/20 px-2.5 py-1 text-xs font-medium text-red-300 transition-colors hover:bg-red-900/40 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-700/40 bg-red-900/20 px-2.5 py-2 text-xs font-medium text-red-300 transition-colors hover:bg-red-900/40 disabled:opacity-50"
                     >
                       Poista
                     </DeleteDocumentButton>
@@ -471,19 +492,19 @@ export default function VatWorkspace({
                     <table className="w-full min-w-[760px]">
                       <thead className="bg-surface-1/80">
                         <tr className="border-b border-border-subtle/70">
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                          <th className={tableHeadClass}>
                             Rivi
                           </th>
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                          <th className={tableHeadClass}>
                             Tili
                           </th>
-                          <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                          <th className={tableHeadClass}>
                             Kuvaus
                           </th>
-                          <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                          <th className={tableHeadRightClass}>
                             Debet
                           </th>
-                          <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                          <th className={tableHeadRightClass}>
                             Kredit
                           </th>
                         </tr>

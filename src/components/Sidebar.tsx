@@ -61,9 +61,9 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`group flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 ${
+      className={`group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 ${
         active
-          ? 'bg-accent-muted text-accent-light'
+          ? 'bg-accent-muted text-text-primary'
           : 'text-text-secondary hover:text-text-primary hover:bg-surface-3/60'
       }`}
     >
@@ -136,6 +136,8 @@ export default function Sidebar({
             Tilikausi
           </label>
           <select
+            id="sidebar-period-select"
+            aria-label="Tilikausi"
             value={selectedPeriodId}
             onChange={(e) => {
               const params = new URLSearchParams(searchParams.toString());

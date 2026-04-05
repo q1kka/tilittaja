@@ -18,8 +18,11 @@ import {
 } from '@/lib/receipt-resolution';
 import { resolveDocumentLabels } from '@/lib/document-labels';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Pääkirja – Tilittaja' };
 
 export default async function GeneralLedgerPage({
   searchParams,
@@ -155,7 +158,7 @@ export default async function GeneralLedgerPage({
     });
 
   return (
-    <div className="w-full max-w-[1600px] p-5">
+    <div className="w-full max-w-[1600px] overflow-x-auto p-5">
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">

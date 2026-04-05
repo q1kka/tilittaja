@@ -19,8 +19,11 @@ import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
 import BalanceSheetWorkspace from '@/components/BalanceSheetWorkspace';
 import type { BalanceSheetEntry } from '@/components/BalanceSheetWorkspace';
 import type { AccountType } from '@/lib/types';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tase – Tilittaja' };
 
 export default async function BalanceSheetPage({
   searchParams,

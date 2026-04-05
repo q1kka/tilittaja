@@ -1,7 +1,10 @@
 import { getAccounts, getCOAHeadings, runWithResolvedDb } from '@/lib/db';
 import AccountsFilter from '@/components/AccountsFilter';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tilikartta – Tilittaja' };
 
 export default async function AccountsPage() {
   const { accounts, headings } = await runWithResolvedDb(() => ({
@@ -43,7 +46,7 @@ export default async function AccountsPage() {
   });
 
   return (
-    <div className="p-5 max-w-4xl">
+    <div className="p-5 max-w-4xl overflow-x-auto">
       <div className="mb-6">
         <p className="text-[11px] uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
           Järjestelmä

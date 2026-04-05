@@ -20,8 +20,11 @@ import {
 } from '@/lib/receipt-resolution';
 import { resolveDocumentLabels } from '@/lib/document-labels';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tositteet – Tilittaja' };
 
 export default async function DocumentsPage({
   searchParams,
@@ -172,14 +175,14 @@ export default async function DocumentsPage({
         </div>
         <div className="flex items-center gap-4">
           {period.locked ? (
-            <span className="flex items-center gap-1.5 rounded-lg bg-surface-3 px-3 py-1.5 text-xs font-medium text-text-muted">
+            <span className="flex items-center gap-1.5 rounded-lg bg-surface-3 px-3 py-2 text-xs font-medium text-text-muted">
               <Plus className="w-3.5 h-3.5" />
               Uusi tosite
             </span>
           ) : (
             <Link
               href={`/documents/new?period=${periodId}`}
-              className="flex items-center gap-1.5 bg-accent hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+              className="flex items-center gap-1.5 bg-accent hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               Uusi tosite

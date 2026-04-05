@@ -251,14 +251,16 @@ export default function AccountsEntriesWorkspace({
                       selected ? 'bg-accent-muted/90' : 'hover:bg-surface-3/40'
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={() => toggleAccountSelection(account.id)}
-                      onClick={(event) => event.stopPropagation()}
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-medium bg-surface-0/60 text-accent"
-                      aria-label={`Valitse tili ${account.number} ${account.name}`}
-                    />
+                    <label className="inline-flex min-h-[32px] min-w-[32px] shrink-0 cursor-pointer items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleAccountSelection(account.id)}
+                        onClick={(event) => event.stopPropagation()}
+                        className="h-4 w-4 rounded border-border-medium bg-surface-0/60 text-accent"
+                        aria-label={`Valitse tili ${account.number} ${account.name}`}
+                      />
+                    </label>
                     <button
                       type="button"
                       onClick={() => selectSingleAccount(account.id)}

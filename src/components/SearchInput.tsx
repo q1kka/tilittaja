@@ -25,8 +25,9 @@ export default function SearchInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder}
         autoFocus={autoFocus}
-        className="w-full rounded-lg border border-border-subtle bg-surface-2/60 py-1.5 pl-8 pr-8 text-xs text-text-primary placeholder-text-muted outline-none transition-colors focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
+        className="w-full rounded-lg border border-border-subtle bg-surface-2/60 py-2 pl-8 pr-8 text-xs text-text-primary placeholder-text-muted outline-none transition-colors focus:border-accent/40 focus:ring-1 focus:ring-accent/20"
       />
       {value ? (
         <button

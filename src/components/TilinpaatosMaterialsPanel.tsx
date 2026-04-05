@@ -42,7 +42,7 @@ function IconButton({
   disabled?: boolean;
 }) {
   const base =
-    'inline-flex items-center justify-center rounded-md p-1.5 transition-colors';
+    'inline-flex items-center justify-center rounded-md p-2 transition-colors';
   const styles =
     variant === 'accent'
       ? `${base} text-accent hover:bg-accent/15`

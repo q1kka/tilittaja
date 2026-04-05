@@ -298,6 +298,7 @@ export default function DocumentsFilter({
                   <select
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
+                    aria-label="Kuukausisuodatin"
                     className={`${filterControlClass} appearance-none pr-10`}
                   >
                     <option value="all">Kaikki kuukaudet</option>
@@ -583,16 +584,17 @@ export default function DocumentsFilter({
                               }`}
                             />
                           </td>
-                          <td className="whitespace-nowrap px-3 py-1.5">
+                          <td className="overflow-hidden px-3 py-1.5">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleExpand(doc.id);
                               }}
-                              className="font-mono text-xs text-accent-light transition hover:text-accent-light"
+                              className="inline-flex min-h-[32px] items-center font-mono text-xs text-accent-light transition hover:text-accent-light"
+                              title={doc.code}
                             >
-                              {doc.code}
+                              <span className="truncate">{doc.code}</span>
                             </button>
                           </td>
                           <td className="px-3 py-1.5 text-xs tabular-nums text-text-secondary">
@@ -631,7 +633,7 @@ export default function DocumentsFilter({
                                   <Link
                                     href={`/bank-statements/${primaryBankStatementLink.bank_statement_id}`}
                                     onClick={(event) => event.stopPropagation()}
-                                    className="block truncate text-[11px] text-accent-light transition hover:underline"
+                                    className="block min-h-[32px] truncate text-[11px] text-accent-light transition hover:underline leading-[32px]"
                                     title={`Avaa tiliote ${periodLabel(
                                       primaryBankStatementLink.bank_statement_period_start,
                                       primaryBankStatementLink.bank_statement_period_end,

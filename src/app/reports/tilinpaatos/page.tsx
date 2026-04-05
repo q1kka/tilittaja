@@ -18,8 +18,11 @@ import ReadinessSummaryPanel from '@/components/ReadinessSummaryPanel';
 import { CollapsibleStatementCard } from '@/components/StatementTable';
 import CollapsibleSection from '@/components/CollapsibleSection';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tilinpäätös – Tilittaja' };
 
 const MATERIAL_BUTTONS = [
   { label: 'Lataa pääkirja PDF', kind: 'paakirja' },

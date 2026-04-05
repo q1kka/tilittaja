@@ -1,7 +1,10 @@
 import NewBankStatementForm from '@/components/NewBankStatementForm';
 import { getAccounts, runWithResolvedDb } from '@/lib/db';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Lisää tiliote – Tilittaja' };
 
 export default async function NewBankStatementPage() {
   const { accounts } = await runWithResolvedDb(() => ({

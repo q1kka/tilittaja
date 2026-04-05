@@ -8,8 +8,11 @@ import {
   runWithResolvedDb,
 } from '@/lib/db';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tilit ja viennit – Tilittaja' };
 
 export default async function AccountsEntriesPage({
   searchParams,

@@ -21,8 +21,11 @@ import {
 } from '@/lib/receipt-resolution';
 import { notFound } from 'next/navigation';
 import BankStatementEntries from '@/components/BankStatementEntries';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tiliote – Tilittaja' };
 
 interface PageProps {
   params: Promise<{ id: string }>;

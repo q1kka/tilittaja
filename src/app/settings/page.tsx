@@ -12,8 +12,11 @@ import { periodLabel } from '@/lib/accounting';
 import CompanyInfoEditor from '@/components/CompanyInfoEditor';
 import PeriodLockToggle from '@/components/PeriodLockToggle';
 import { type PageSearchParams } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Asetukset – Tilittaja' };
 
 export default async function SettingsPage({
   searchParams,

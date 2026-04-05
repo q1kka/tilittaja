@@ -403,15 +403,18 @@ export default function BankStatementEntries({
             <tr className="border-b border-border-subtle">
               {unprocessedCount > 0 && (
                 <th className="w-10 px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={
-                      unprocessedEntryIds.length > 0 &&
-                      unprocessedEntryIds.every((id) => selectedEntries.has(id))
-                    }
-                    onChange={toggleAll}
-                    className="rounded border-border-subtle bg-surface-0/60 text-accent focus:ring-accent/20"
-                  />
+                  <label className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        unprocessedEntryIds.length > 0 &&
+                        unprocessedEntryIds.every((id) => selectedEntries.has(id))
+                      }
+                      onChange={toggleAll}
+                      className="rounded border-border-subtle bg-surface-0/60 text-accent focus:ring-accent/20"
+                      aria-label="Valitse kaikki rivit"
+                    />
+                  </label>
                 </th>
               )}
               <th className="text-left text-[10px] font-semibold text-text-muted uppercase tracking-[0.15em] px-3 py-2 w-24">
@@ -447,12 +450,15 @@ export default function BankStatementEntries({
                   {unprocessedCount > 0 && (
                     <td className="px-3 py-1.5">
                       {!isProcessed && (
-                        <input
-                          type="checkbox"
-                          checked={selectedEntries.has(entry.id)}
-                          onChange={() => toggleEntry(entry.id)}
-                          className="rounded border-border-subtle bg-surface-0/60 text-accent focus:ring-accent/20"
-                        />
+                        <label className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedEntries.has(entry.id)}
+                            onChange={() => toggleEntry(entry.id)}
+                            className="rounded border-border-subtle bg-surface-0/60 text-accent focus:ring-accent/20"
+                            aria-label={`Valitse rivi: ${entry.counterparty || 'tiliotevienti'}`}
+                          />
+                        </label>
                       )}
                     </td>
                   )}
@@ -495,6 +501,7 @@ export default function BankStatementEntries({
                           onClick={() => void handleMarkUnprocessed(entry.id)}
                           disabled={periodLocked || linkingEntryId === entry.id}
                           className="inline-flex items-center gap-1 rounded border border-border-subtle bg-transparent px-2 py-1 text-xs text-text-secondary hover:bg-surface-3 hover:text-text-primary disabled:cursor-not-allowed disabled:text-text-muted"
+                          aria-label="Poista tositelinkki"
                         >
                           {linkingEntryId === entry.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { PanelLeftOpen } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Menu, PanelLeftOpen, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 
 interface AppShellProps {
@@ -21,7 +21,21 @@ interface AppShellProps {
 
 const SIDEBAR_STORAGE_KEY = 'tilittaja-sidebar-hidden';
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isMobile;
+}
+
 export default function AppShell({ children, sidebar }: AppShellProps) {
+  const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarHidden, setSidebarHidden] = useState(() => {
     if (typeof window === 'undefined') {
       return false;
@@ -29,13 +43,60 @@ export default function AppShell({ children, sidebar }: AppShellProps) {
     return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
   });
 
+  useEffect(() => {
+    if (!isMobile) setMobileOpen(false);
+  }, [isMobile]);
+
   const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+      return;
+    }
     setSidebarHidden((current) => {
       const next = !current;
       window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
       return next;
     });
   };
+
+  if (isMobile) {
+    return (
+      <div className="flex h-full flex-col">
+        <header className="flex items-center gap-3 border-b border-border-subtle bg-surface-1 px-4 py-2.5">
+          <button
+            type="button"
+            onClick={() => setMobileOpen((o) => !o)}
+            className="inline-flex items-center justify-center rounded-lg p-2 text-text-secondary transition-colors hover:bg-surface-3/60 hover:text-text-primary"
+            aria-label={mobileOpen ? 'Sulje valikko' : 'Avaa valikko'}
+          >
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
+          <span className="text-sm font-semibold text-text-primary tracking-tight">
+            Tilittaja
+          </span>
+        </header>
+
+        {mobileOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-30 bg-black/60"
+              onClick={() => setMobileOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="fixed inset-y-0 left-0 z-40 w-64 overflow-y-auto">
+              <Sidebar {...sidebar} onToggle={toggleSidebar} />
+            </div>
+          </>
+        )}
+
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full">

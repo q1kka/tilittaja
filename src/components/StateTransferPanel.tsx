@@ -103,9 +103,9 @@ export default function StateTransferPanel({
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200/70">
               Tuonti ja vienti
             </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
               Koko kirjanpidon palautettava varmuuskopio
-            </h1>
+            </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
               Vienti kokoaa aktiivisen tietolähteen yhteen ZIP-pakettiin:
               SQLite-kannan, tositteiden PDF:t, tiliotteet sekä muun aineiston.
@@ -225,8 +225,8 @@ export default function StateTransferPanel({
           </div>
 
           <div className="mt-6 space-y-4">
-            <label className="block">
-              <span className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
+            <label className="block text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
+              <span className="mb-2 block">
                 Valitse ZIP-paketti
               </span>
               <input

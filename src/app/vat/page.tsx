@@ -21,8 +21,11 @@ import {
   buildEntryDescriptionsByDocumentId,
   resolveDocumentReceiptsForSource,
 } from '@/lib/receipt-resolution';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Arvonlisävero – Tilittaja' };
 
 function resolveTimestamp(
   raw: string | string[] | undefined,

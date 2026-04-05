@@ -89,7 +89,7 @@ export default function JournalFilter({
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -103,7 +103,7 @@ export default function JournalFilter({
             return (
               <section
                 key={group.documentId}
-                className={`overflow-hidden rounded-xl border bg-surface-2/50 transition-colors ${
+                className={`overflow-x-auto overflow-y-hidden rounded-xl border bg-surface-2/50 transition-colors ${
                   isSelected
                     ? 'border-accent/35 shadow-[0_0_0_1px_rgba(245,158,11,0.18)]'
                     : 'border-border-subtle'

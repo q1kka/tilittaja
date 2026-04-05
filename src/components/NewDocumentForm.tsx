@@ -184,10 +184,16 @@ export default function NewDocumentForm({
     periodId != null ? `/documents?period=${periodId}` : '/documents';
 
   return (
-    <div className="p-8">
+    <form
+      className="p-8"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!periodLocked && !saving && isBalanced) void handleSave();
+      }}
+    >
       <Link
         href={backHref}
-        className="mb-6 inline-flex items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+        className="mb-6 inline-flex min-h-[32px] items-center gap-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
         Takaisin tositteisiin
@@ -216,10 +222,14 @@ export default function NewDocumentForm({
       ) : null}
 
       <div className="mb-6 rounded-xl border border-border-subtle bg-surface-2/50 p-6">
-        <label className="mb-2 block text-sm font-medium text-text-secondary">
+        <label
+          htmlFor="new-doc-date"
+          className="mb-2 block text-sm font-medium text-text-secondary"
+        >
           Päivämäärä
         </label>
           <input
+            id="new-doc-date"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
@@ -313,8 +323,9 @@ export default function NewDocumentForm({
                   <button
                     type="button"
                     onClick={() => removeRow(index)}
-                    className="text-text-muted transition-colors hover:text-rose-400"
+                    className="rounded p-2 text-text-muted transition-colors hover:text-rose-400"
                     disabled={periodLocked || rows.length <= 2}
+                    aria-label="Poista rivi"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -329,7 +340,7 @@ export default function NewDocumentForm({
                   type="button"
                   onClick={addRow}
                   disabled={periodLocked}
-                  className="flex items-center gap-1 text-sm text-accent transition-colors hover:text-accent-light"
+                  className="flex min-h-[32px] items-center gap-1 text-sm text-accent transition-colors hover:text-accent-light"
                 >
                   <Plus className="h-4 w-4" />
                   Lisää rivi
@@ -356,8 +367,7 @@ export default function NewDocumentForm({
             : `Erotus: ${formatNumber(Math.abs(totalDebit - totalCredit))}`}
         </div>
         <button
-          type="button"
-          onClick={() => void handleSave()}
+          type="submit"
           disabled={periodLocked || saving || !isBalanced}
           className="rounded-lg bg-accent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:bg-surface-3 disabled:text-text-muted"
         >
@@ -402,6 +412,6 @@ export default function NewDocumentForm({
           description={accountPickerRow.description}
         />
       )}
-    </div>
+    </form>
   );
 }

@@ -18,8 +18,11 @@ import {
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
 import IncomeStatementWorkspace from '@/components/IncomeStatementWorkspace';
 import type { AccountType } from '@/lib/types';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Tuloslaskelma – Tilittaja' };
 
 export default async function IncomeStatementPage({
   searchParams,

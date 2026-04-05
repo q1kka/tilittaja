@@ -17,13 +17,13 @@ function StatusDot({ ok }: { ok: boolean }) {
 function CountBadge({ count, total }: { count: number; total?: number }) {
   if (total !== undefined) {
     return (
-      <span className="text-xs font-mono text-text-secondary tabular-nums">
+      <span className="shrink-0 whitespace-nowrap text-right text-xs font-mono text-text-secondary tabular-nums">
         {count}/{total}
       </span>
     );
   }
   return (
-    <span className="text-xs font-mono text-text-secondary tabular-nums">
+    <span className="shrink-0 whitespace-nowrap text-right text-xs font-mono text-text-secondary tabular-nums">
       {count}
     </span>
   );
@@ -176,7 +176,7 @@ export default function ReadinessSummaryPanel({
                   <div key={item.label} className="flex items-start gap-2">
                     <StatusDot ok={item.ok} />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                         <span className="text-sm text-text-primary truncate">
                           {item.label}
                         </span>

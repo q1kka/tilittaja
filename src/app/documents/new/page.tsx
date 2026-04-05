@@ -6,8 +6,11 @@ import {
   runWithResolvedDb,
 } from '@/lib/db';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = { title: 'Uusi tosite – Tilittaja' };
 
 export default async function NewDocumentPage({
   searchParams,

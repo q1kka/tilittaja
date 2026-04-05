@@ -172,7 +172,7 @@ export default function GeneralLedgerFilter({
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <SearchInput
             value={search}
@@ -208,7 +208,7 @@ export default function GeneralLedgerFilter({
             return (
               <div
                 key={group.accountId}
-                className="bg-surface-2/50 border border-border-subtle rounded-xl overflow-hidden"
+                className="bg-surface-2/50 border border-border-subtle rounded-xl overflow-hidden overflow-x-auto"
               >
                 <button
                   type="button"
@@ -306,22 +306,22 @@ export default function GeneralLedgerFilter({
                                 : 'hover:bg-surface-3/40'
                             } focus-visible:bg-accent-muted/60`}
                           >
-                            <td className="px-3 py-1.5 text-xs font-mono text-text-secondary">
+                            <td className="px-3 py-2 text-xs font-mono text-text-secondary">
                               {entry.document_number}
                             </td>
-                            <td className="px-3 py-1.5 text-xs text-text-secondary tabular-nums">
+                            <td className="px-3 py-2 text-xs text-text-secondary tabular-nums">
                               {formatDate(entry.document_date)}
                             </td>
-                            <td className="px-3 py-1.5 text-xs text-text-secondary truncate max-w-0">
+                            <td className="px-3 py-2 text-xs text-text-secondary truncate max-w-0">
                               {entry.description}
                             </td>
-                            <td className="px-3 py-1.5 text-xs text-right font-mono text-text-secondary tabular-nums">
+                            <td className="px-3 py-2 text-xs text-right font-mono text-text-secondary tabular-nums">
                               {entry.debit ? formatCurrency(entry.amount) : ''}
                             </td>
-                            <td className="px-3 py-1.5 text-xs text-right font-mono text-text-secondary tabular-nums">
+                            <td className="px-3 py-2 text-xs text-right font-mono text-text-secondary tabular-nums">
                               {!entry.debit ? formatCurrency(entry.amount) : ''}
                             </td>
-                            <td className="px-3 py-1.5 text-xs text-right font-mono text-text-primary tabular-nums">
+                            <td className="px-3 py-2 text-xs text-right font-mono text-text-primary tabular-nums">
                               {formatCurrency(entry.balance)}
                             </td>
                           </tr>

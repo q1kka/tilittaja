@@ -256,7 +256,7 @@ export default function ReceiptAttachmentPanel({
                   rel="noreferrer"
                   aria-label="Avaa PDF uudessa valilehdessa"
                   title="Avaa PDF"
-                  className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-text-muted transition hover:text-text-primary"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded text-text-muted transition hover:text-text-primary"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>
