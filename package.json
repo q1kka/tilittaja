@@ -1,0 +1,65 @@
+{
+  "name": "tilittaja",
+  "version": "0.1.0",
+  "description": "Modern Finnish bookkeeping (kirjanpito) web application",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/q1kka/tilitin-next.git"
+  },
+  "keywords": [
+    "bookkeeping",
+    "kirjanpito",
+    "accounting",
+    "tilittaja",
+    "finnish",
+    "double-entry",
+    "sqlite",
+    "nextjs"
+  ],
+  "scripts": {
+    "seed:demo": "node scripts/seed-demo-db.cjs",
+    "seed:e2e": "node scripts/seed-playwright-db.cjs",
+    "dev:e2e": "next dev --webpack",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.577.0",
+    "next": "16.2.1",
+    "pdfkit": "^0.18.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20",
+    "@types/pdfkit": "^0.17.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.2",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "jsdom": "^29.0.1",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^4.1.0"
+  }
+}
