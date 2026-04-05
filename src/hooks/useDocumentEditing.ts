@@ -42,6 +42,7 @@ export function useDocumentEditing({
     documentsState,
     setDocumentsState,
     dateValues,
+    setDateValues,
     updateDateValue,
     savingId,
     setSavingId,
@@ -447,7 +448,7 @@ export function useDocumentEditing({
         ),
       );
     },
-    [],
+    [setDocumentsState],
   );
 
   // ── Public API ───────────────────────────────────────────────────────

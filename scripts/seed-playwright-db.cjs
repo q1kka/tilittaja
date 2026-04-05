@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { seedRealisticDatabase } = require('./seed-demo-db.cjs');
 
 seedRealisticDatabase({

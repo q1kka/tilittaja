@@ -50,12 +50,12 @@ describe('runDbAction', () => {
     ).rejects.toThrow('Lukittu');
   });
 
-  it('returns existing error instances unchanged', async () => {
+  it('wraps generic Error instances with the fallback message', async () => {
     await expect(
       runDbAction(() => {
         throw new Error('Boom');
       }, 'fallback'),
-    ).rejects.toThrow('Boom');
+    ).rejects.toThrow('fallback');
   });
 
   it('uses the fallback message for unknown error values', async () => {

@@ -8,6 +8,6 @@ export async function POST(request: NextRequest) {
     const document = await createVatSettlementAction(body);
     return NextResponse.json(document);
   } catch (error) {
-    return jsonActionError(error, 'ALV-ilmoituksen muodostus epäonnistui');
+    return jsonActionError(error, 'ALV-ilmoituksen muodostus epäonnistui.');
   }
 }

@@ -8,6 +8,6 @@ export async function POST(request: NextRequest) {
     const result = await mergeBankStatementsAction(body);
     return NextResponse.json(result);
   } catch (error) {
-    return jsonActionError(error, 'Tiliotteiden yhdistäminen epäonnistui');
+    return jsonActionError(error, 'Tiliotteiden yhdistäminen epäonnistui.');
   }
 }

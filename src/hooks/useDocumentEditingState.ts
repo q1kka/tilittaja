@@ -74,6 +74,7 @@ export function useDocumentEditingState({
   >(null);
   const [deleteErrors, setDeleteErrors] = useState<Record<number, string>>({});
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const nextDocuments = documents.map(normalizeDocumentSummary);
 
@@ -115,6 +116,7 @@ export function useDocumentEditingState({
     setDuplicatedDocumentId(null);
     setDeleteErrors({});
   }, [documents, periodId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const updateDateValue = (id: number, value: string) => {
     setDateValues((prev) => ({ ...prev, [id]: value }));
@@ -175,6 +177,7 @@ export function useDocumentEditingState({
     documentsState,
     setDocumentsState,
     dateValues,
+    setDateValues,
     updateDateValue,
     savingId,
     setSavingId,

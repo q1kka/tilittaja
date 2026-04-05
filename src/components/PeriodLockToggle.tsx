@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2, Lock, LockOpen } from 'lucide-react';
 import { setPeriodLockAction } from '@/actions/app-actions';
 
@@ -13,6 +14,7 @@ export default function PeriodLockToggle({
   locked: boolean;
   label: string;
 }) {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [currentLocked, setCurrentLocked] = useState(locked);
 
@@ -29,6 +31,7 @@ export default function PeriodLockToggle({
     try {
       await setPeriodLockAction(periodId, nextLocked);
       setCurrentLocked(nextLocked);
+      router.refresh();
     } finally {
       setBusy(false);
     }

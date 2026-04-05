@@ -2,6 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { ApiRouteError } from '@/lib/api-helpers';
 
+const { resolveRequestDbPath, runWithRequestDb } = vi.hoisted(() => ({
+  resolveRequestDbPath: vi.fn(),
+  runWithRequestDb: vi.fn(),
+}));
+
+vi.mock('@/lib/db/connection', () => ({
+  resolveRequestDbPath,
+  runWithRequestDb,
+}));
+
 const { updateDocumentReceiptAction, uploadDocumentReceiptAction } = vi.hoisted(
   () => ({
     updateDocumentReceiptAction: vi.fn(),
@@ -50,6 +60,10 @@ function uploadRequest(id: string, file?: File, withMultipartHeader = true) {
 describe('document receipt route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resolveRequestDbPath.mockResolvedValue('/fake/path');
+    runWithRequestDb.mockImplementation(
+      (_path: string, fn: () => unknown) => fn(),
+    );
   });
 
   it('clears the manual receipt link through PATCH', async () => {

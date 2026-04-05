@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Menu, PanelLeftOpen, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 
@@ -20,12 +20,17 @@ interface AppShellProps {
 }
 
 const SIDEBAR_STORAGE_KEY = 'tilittaja-sidebar-hidden';
+const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia(MOBILE_MEDIA_QUERY).matches
+      : false,
+  );
+
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    setIsMobile(mq.matches);
+    const mq = window.matchMedia(MOBILE_MEDIA_QUERY);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
@@ -43,10 +48,6 @@ export default function AppShell({ children, sidebar }: AppShellProps) {
     return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
   });
 
-  useEffect(() => {
-    if (!isMobile) setMobileOpen(false);
-  }, [isMobile]);
-
   const toggleSidebar = () => {
     if (isMobile) {
       setMobileOpen(false);
@@ -58,6 +59,12 @@ export default function AppShell({ children, sidebar }: AppShellProps) {
       return next;
     });
   };
+
+  const renderSidebar = () => (
+    <Suspense fallback={null}>
+      <Sidebar {...sidebar} onToggle={toggleSidebar} />
+    </Suspense>
+  );
 
   if (isMobile) {
     return (
@@ -88,7 +95,7 @@ export default function AppShell({ children, sidebar }: AppShellProps) {
               aria-hidden="true"
             />
             <div className="fixed inset-y-0 left-0 z-40 w-64 overflow-y-auto">
-              <Sidebar {...sidebar} onToggle={toggleSidebar} />
+              {renderSidebar()}
             </div>
           </>
         )}
@@ -110,7 +117,7 @@ export default function AppShell({ children, sidebar }: AppShellProps) {
             sidebarHidden ? '-translate-x-full' : 'translate-x-0'
           }`}
         >
-          <Sidebar {...sidebar} onToggle={toggleSidebar} />
+          {renderSidebar()}
         </div>
       </div>
       <main className="relative flex-1 overflow-auto">
