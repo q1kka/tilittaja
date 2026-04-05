@@ -1,0 +1,64 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { ApiRouteError, jsonError } from '@/lib/api-helpers';
+import {
+  closeDbConnection,
+  resolveDbPath,
+  resolveRequestDataSource,
+} from '@/lib/db';
+import { readImportedStateArchive } from '@/lib/state-transfer';
+
+export const runtime = 'nodejs';
+
+function isZipFile(file: File): boolean {
+  return (
+    file.type === 'application/zip' ||
+    file.type === 'application/x-zip-compressed' ||
+    file.name.toLowerCase().endsWith('.zip')
+  );
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get('file');
+
+    if (!(file instanceof File)) {
+      return jsonError('Lähetä yksi ZIP-tiedosto kentässä `file`', 400);
+    }
+
+    if (!isZipFile(file)) {
+      return jsonError('Vain ZIP-paketit ovat sallittuja', 400);
+    }
+
+    const source = resolveRequestDataSource(request);
+    if (!source) {
+      return jsonError('Aktiivista tietolähdettä ei löytynyt.', 400);
+    }
+    const dbPath = resolveDbPath(source);
+    if (!dbPath) {
+      return jsonError(
+        'Aktiivisen tietolähteen SQLite-kantaa ei löytynyt',
+        404,
+      );
+    }
+
+    closeDbConnection(dbPath);
+
+    const archiveBuffer = Buffer.from(await file.arrayBuffer());
+    const imported = await readImportedStateArchive(archiveBuffer, source);
+
+    return NextResponse.json({
+      ok: true,
+      source,
+      fileCount: imported.fileCount,
+      restoredAt: new Date().toISOString(),
+      manifest: imported.manifest,
+    });
+  } catch (error) {
+    if (error instanceof ApiRouteError) {
+      return jsonError(error.message, error.status);
+    }
+    console.error('Tilittajan tilan palautus epäonnistui.', error);
+    return jsonError('Tilan palautus epäonnistui.');
+  }
+}
