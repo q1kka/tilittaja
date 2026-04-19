@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 process.env.PLAYWRIGHT_TEST_BASE_URL ??= 'http://localhost:3000';
 process.env.PLAYWRIGHT_E2E_SOURCE_SLUG ??= `__playwright_e2e_${process.pid}`;
+process.env.PLAYWRIGHT_BANK_STATEMENT_IMPORT_FIXTURE ??= '1';
 
 const storageStatePath = path.resolve(
   process.cwd(),
