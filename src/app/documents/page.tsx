@@ -13,6 +13,7 @@ import {
 } from '@/lib/db';
 import { periodLabel } from '@/lib/accounting';
 import DocumentsFilter from '@/components/DocumentsFilter';
+import DocumentImportButton from '@/components/DocumentImportButton';
 import { Plus } from 'lucide-react';
 import {
   resolveDocumentReceiptsForSource,
@@ -170,10 +171,15 @@ export default async function DocumentsPage({
             Tositteet
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {periodLabel(period.start_date, period.end_date)}
+            {periodLabel(period.start_date, period.end_date)} ·{' '}
+            {documents.length} tositetta
           </p>
         </div>
         <div className="flex items-center gap-4">
+          <DocumentImportButton
+            periodId={period.id}
+            periodLocked={period.locked}
+          />
           {period.locked ? (
             <span className="flex items-center gap-1.5 rounded-lg bg-surface-3 px-3 py-2 text-xs font-medium text-text-muted">
               <Plus className="w-3.5 h-3.5" />
