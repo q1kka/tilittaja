@@ -11,12 +11,15 @@ function makePackage(
   return {
     companyName: 'Test Oy',
     businessId: '1234567-8',
+    periodLabel: 'Tilikausi 2025',
     periodStart: '01.01.2025',
     periodEnd: '31.12.2025',
+    comparisonPeriodLabel: null,
     balanceSheetRows: [],
     incomeStatementRows: [],
     notes: [],
     equity: {
+      shareCapital: 2500,
       previousPeriodsProfit: 5000,
       currentPeriodProfit: 2000,
       distributableEquity: 7000,
@@ -24,12 +27,23 @@ function makePackage(
     metadata: {
       place: 'Helsinki',
       signatureDate: '2026-03-15',
+      preparedBy: 'Testi Henkilö',
       signerName: 'Testi Henkilö',
       signerTitle: 'Hallituksen jäsen',
+      microDeclaration: '',
+      parentCompany: '',
+      shareInfo: '',
+      personnelCount: '',
+      archiveNote: '',
       meetingDate: '2026-03-15',
       boardProposal: '',
       attendees: '',
       dischargeTarget: 'board',
+    },
+    compliance: {
+      checks: [],
+      hardErrors: 0,
+      warnings: 0,
     },
     ...overrides,
   };
@@ -69,6 +83,7 @@ describe('yhtiokokous pdf', () => {
       const buffer = await buildYhtiokokousPdf(
         makePackage({
           equity: {
+            shareCapital: 2500,
             previousPeriodsProfit: 1000,
             currentPeriodProfit: -500,
             distributableEquity: 500,
@@ -89,8 +104,14 @@ describe('yhtiokokous pdf', () => {
           metadata: {
             place: 'Tampere',
             signatureDate: '2026-04-01',
+            preparedBy: 'Matti Meikäläinen',
             signerName: 'Matti Meikäläinen',
             signerTitle: 'toimitusjohtaja',
+            microDeclaration: '',
+            parentCompany: '',
+            shareInfo: '',
+            personnelCount: '',
+            archiveNote: '',
             meetingDate: '2026-04-01',
             boardProposal: 'Hallitus esittää, että voitto jaetaan osinkoina.',
             attendees: 'Matti Meikäläinen, Maija Meikäläinen',
@@ -107,8 +128,14 @@ describe('yhtiokokous pdf', () => {
           metadata: {
             place: 'Helsinki',
             signatureDate: '2026-03-15',
+            preparedBy: '',
             signerName: '',
             signerTitle: '',
+            microDeclaration: '',
+            parentCompany: '',
+            shareInfo: '',
+            personnelCount: '',
+            archiveNote: '',
             meetingDate: '',
             boardProposal: '',
             attendees: '',

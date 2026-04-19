@@ -5,14 +5,20 @@ const { resolveRequestDbPath, runWithRequestDb } = vi.hoisted(() => ({
   resolveRequestDbPath: vi.fn(),
   runWithRequestDb: vi.fn(),
 }));
+const { revalidatePath } = vi.hoisted(() => ({
+  revalidatePath: vi.fn(),
+}));
 
 vi.mock('@/lib/db/connection', () => ({
   resolveRequestDbPath,
   runWithRequestDb,
 }));
+vi.mock('next/cache', () => ({
+  revalidatePath,
+}));
 
 import { ApiRouteError } from '@/lib/api-helpers';
-import { runDbAction } from './_helpers';
+import { revalidateApp, runDbAction } from './_helpers';
 
 describe('runDbAction', () => {
   beforeEach(() => {
@@ -64,5 +70,25 @@ describe('runDbAction', () => {
         throw 'mystery';
       }, 'Tuntematon virhe'),
     ).rejects.toThrow('Tuntematon virhe');
+  });
+});
+
+describe('revalidateApp', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('revalidates shared app pages and deduplicates extras', () => {
+    revalidateApp(['/settings/recurring-rent', '/settings']);
+
+    expect(revalidatePath).toHaveBeenNthCalledWith(1, '/', 'layout');
+    expect(revalidatePath).toHaveBeenCalledWith('/documents');
+    expect(revalidatePath).toHaveBeenCalledWith('/accounts');
+    expect(revalidatePath).toHaveBeenCalledWith('/bank-statements');
+    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+    expect(revalidatePath).toHaveBeenCalledWith('/settings/recurring-rent');
+    expect(revalidatePath).toHaveBeenCalledWith('/vat');
+    expect(revalidatePath).toHaveBeenCalledWith('/reports/tilinpaatos');
+    expect(revalidatePath).toHaveBeenCalledTimes(8);
   });
 });

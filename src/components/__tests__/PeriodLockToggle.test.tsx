@@ -57,7 +57,7 @@ describe('PeriodLockToggle', () => {
   });
 
   it('shows the saving state while the action is pending', async () => {
-    let resolveAction: (() => void) | null = null;
+    let resolveAction!: () => void;
     setPeriodLockAction.mockImplementation(
       () =>
         new Promise((resolve) => {
@@ -71,7 +71,7 @@ describe('PeriodLockToggle', () => {
     expect(
       screen.getByRole('button', { name: /Tallennetaan/i }),
     ).toBeDisabled();
-    resolveAction?.();
+    resolveAction();
     await waitFor(() => {
       expect(setPeriodLockAction).toHaveBeenCalledWith(4, false);
     });

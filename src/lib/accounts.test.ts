@@ -5,7 +5,6 @@ let testDb: InstanceType<typeof Database>;
 
 vi.mock('./db/connection', () => ({
   getDb: () => testDb,
-  initDb: vi.fn(),
 }));
 
 import {

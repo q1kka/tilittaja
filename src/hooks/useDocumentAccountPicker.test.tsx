@@ -16,9 +16,9 @@ vi.mock('@/actions/app-actions', () => ({
 }));
 
 const accounts: AccountOption[] = [
-  { id: 1, number: '1000', name: 'Kassa', type: 0 },
-  { id: 2, number: '3000', name: 'Myynti', type: 3 },
-  { id: 3, number: '2000', name: 'Pankki', type: 0 },
+  { id: 1, number: '1000', name: 'Kassa', type: 0, vat_percentage: 0 },
+  { id: 2, number: '3000', name: 'Myynti', type: 3, vat_percentage: 0 },
+  { id: 3, number: '2000', name: 'Pankki', type: 0, vat_percentage: 0 },
 ];
 
 function makeDocumentsState(): DocumentSummary[] {

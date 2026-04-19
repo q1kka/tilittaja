@@ -16,11 +16,14 @@ const {
   getBankStatementEntry: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => ({
+vi.mock('@/lib/db/documents', () => ({
   getPeriods,
   getPeriod,
   getDocument,
   getEntry,
+}));
+
+vi.mock('@/lib/db/bank-statements', () => ({
   getBankStatement,
   getBankStatementEntry,
 }));

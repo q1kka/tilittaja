@@ -16,7 +16,6 @@ import {
   closeDbConnection,
   getDb,
   hasAnyDataSource,
-  initDb,
   resolveDbPath,
   resolveRequestDbPath,
   runWithRequestDb,
@@ -45,10 +44,12 @@ function mockDataDir(sources: Record<string, string[]> | null) {
           return Object.keys(sources).map((name) => ({
             name,
             isDirectory: () => true,
-          })) as ReturnType<typeof fs.readdirSync>;
+          })) as unknown as ReturnType<typeof fs.readdirSync>;
         }
 
-        return Object.keys(sources) as ReturnType<typeof fs.readdirSync>;
+        return Object.keys(sources) as unknown as ReturnType<
+          typeof fs.readdirSync
+        >;
       }
 
       if (sources) {
@@ -57,7 +58,9 @@ function mockDataDir(sources: Record<string, string[]> | null) {
         );
 
         if (matchingSource) {
-          return matchingSource[1] as ReturnType<typeof fs.readdirSync>;
+          return matchingSource[1] as unknown as ReturnType<
+            typeof fs.readdirSync
+          >;
         }
       }
 
@@ -151,7 +154,7 @@ describe('connection - extended coverage', () => {
   });
 
   describe('closeDbConnection', () => {
-    it('resets fallbackDbPath when closing the fallback connection', () => {
+    it('closes a request-scoped connection idempotently', () => {
       const dbPath = path.join(tmpDir, 'fallback-close.sqlite');
       new Database(dbPath).close();
 
@@ -192,24 +195,6 @@ describe('connection - extended coverage', () => {
       });
 
       closeDbConnection(dbPath);
-    });
-  });
-
-  describe('initDb', () => {
-    it('handles full initialization failure gracefully', async () => {
-      const { cookies } = await import('next/headers');
-      (cookies as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('no request context'),
-      );
-
-      const orig = process.env.DATABASE_PATH;
-      delete process.env.DATABASE_PATH;
-
-      try {
-        await expect(initDb()).resolves.not.toThrow();
-      } finally {
-        if (orig !== undefined) process.env.DATABASE_PATH = orig;
-      }
     });
   });
 });

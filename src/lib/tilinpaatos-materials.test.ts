@@ -16,12 +16,15 @@ const {
   getSettings: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => ({
+vi.mock('@/lib/db/documents', () => ({
   getAccounts,
   getAllEntriesWithDetails,
   getEntriesForPeriod,
   getPeriods,
   getReportStructure,
+}));
+
+vi.mock('@/lib/db/settings', () => ({
   getSettings,
 }));
 

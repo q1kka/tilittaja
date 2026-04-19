@@ -16,7 +16,30 @@ const dbMocks = vi.hoisted(() => ({
   getBankStatements: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => dbMocks);
+vi.mock('@/lib/db/documents', () => ({
+  getAccounts: dbMocks.getAccounts,
+  getDocumentBalances: dbMocks.getDocumentBalances,
+  getDocuments: dbMocks.getDocuments,
+  getEntriesForPeriod: dbMocks.getEntriesForPeriod,
+  getPeriods: dbMocks.getPeriods,
+  getReportStructure: dbMocks.getReportStructure,
+}));
+
+vi.mock('@/lib/db/settings', () => ({
+  getSettingProperties: dbMocks.getSettingProperties,
+  getSettings: dbMocks.getSettings,
+}));
+
+vi.mock('@/lib/db/bank-statements', () => ({
+  getBankStatements: dbMocks.getBankStatements,
+  getUnlinkedBankStatementEntriesForPeriod:
+    dbMocks.getUnlinkedBankStatementEntriesForPeriod,
+}));
+
+vi.mock('@/lib/db/metadata-receipts', () => ({
+  getDocumentMetadataMap: dbMocks.getDocumentMetadataMap,
+  getDocumentReceiptLinks: dbMocks.getDocumentReceiptLinks,
+}));
 
 import { buildReadinessSummary } from '@/lib/tilinpaatos';
 

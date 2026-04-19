@@ -18,10 +18,13 @@ const { getDb, getSettings, resolveDbPath } = vi.hoisted(() => ({
   resolveDbPath: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => ({
+vi.mock('@/lib/db/connection', () => ({
   getDb,
-  getSettings,
   resolveDbPath,
+}));
+
+vi.mock('@/lib/db/settings', () => ({
+  getSettings,
 }));
 
 import {

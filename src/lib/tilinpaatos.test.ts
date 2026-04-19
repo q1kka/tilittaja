@@ -28,17 +28,26 @@ const {
   getBankStatements: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => ({
-  getSettings,
+vi.mock('@/lib/db/documents', () => ({
   getPeriods,
   getAccounts,
   getEntriesForPeriod,
   getReportStructure,
-  getSettingProperties,
   getDocumentBalances,
   getDocuments,
+}));
+
+vi.mock('@/lib/db/settings', () => ({
+  getSettings,
+  getSettingProperties,
+}));
+
+vi.mock('@/lib/db/metadata-receipts', () => ({
   getDocumentMetadataMap,
   getDocumentReceiptLinks,
+}));
+
+vi.mock('@/lib/db/bank-statements', () => ({
   getUnlinkedBankStatementEntriesForPeriod,
   getBankStatements,
 }));

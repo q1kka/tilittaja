@@ -18,7 +18,6 @@ import {
   runWithRequestDb,
   getDb,
   closeDbConnection,
-  initDb,
 } from './connection';
 
 describe('connection', () => {
@@ -141,16 +140,6 @@ describe('connection', () => {
 
       closeDbConnection(dbPath);
       expect(() => closeDbConnection(dbPath)).not.toThrow();
-    });
-  });
-
-  describe('initDb', () => {
-    it('does not throw when cookie fails', async () => {
-      const { cookies } = await import('next/headers');
-      (cookies as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('no cookie'),
-      );
-      await expect(initDb()).resolves.not.toThrow();
     });
   });
 });

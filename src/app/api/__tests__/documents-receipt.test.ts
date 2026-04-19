@@ -100,9 +100,6 @@ describe('document receipt route', () => {
   });
 
   it('rejects non-pdf uploads', async () => {
-    uploadDocumentReceiptAction.mockRejectedValue(
-      new ApiRouteError('Vain PDF-tiedostot ovat sallittuja', 400),
-    );
     const file = new File(['plain'], 'notes.txt', { type: 'text/plain' });
 
     const response = await POST(
@@ -114,7 +111,7 @@ describe('document receipt route', () => {
     await expect(response.json()).resolves.toEqual({
       error: 'Vain PDF-tiedostot ovat sallittuja',
     });
-    expect(uploadDocumentReceiptAction).toHaveBeenCalledWith(5, file);
+    expect(uploadDocumentReceiptAction).not.toHaveBeenCalled();
   });
 
   it('stores uploaded pdf files and returns the resolved receipt payload', async () => {

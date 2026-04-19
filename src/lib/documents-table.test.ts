@@ -175,7 +175,7 @@ describe('normalizeDocumentSummary', () => {
     };
     const normalized = normalizeDocumentSummary(
       docSummary({
-        entries: [raw as EntryDetail],
+        entries: [raw as unknown as EntryDetail],
       }),
     );
     expect(normalized.entries[0]?.isVatEntry).toBe(true);
