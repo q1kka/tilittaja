@@ -1,12 +1,12 @@
-import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import {
+  getAccounts,
   getBankStatements,
   getPeriods,
   getSettings,
   runWithResolvedDb,
 } from '@/lib/db';
 import BankStatementsList from '@/components/BankStatementsList';
+import BankStatementImportButton from '@/components/BankStatementImportButton';
 import { periodLabel } from '@/lib/accounting';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
 import type { Metadata } from 'next';
@@ -21,9 +21,19 @@ export default async function BankStatementsPage({
   searchParams: PageSearchParams;
 }) {
   const params = await searchParams;
-  const { settings, periods } = await runWithResolvedDb(() => ({
+  const { settings, periods, bankAccounts } = await runWithResolvedDb(() => ({
     settings: getSettings(),
     periods: getPeriods(),
+    bankAccounts: getAccounts()
+      .filter((account) => {
+        const accountNumber = Number.parseInt(account.number, 10);
+        return accountNumber >= 1910 && accountNumber <= 1950;
+      })
+      .map((account) => ({
+        id: account.id,
+        number: account.number,
+        name: account.name,
+      })),
   }));
   const periodId = resolvePeriodId(params, periods, settings.current_period_id);
   const period =
@@ -50,13 +60,7 @@ export default async function BankStatementsPage({
             {statements.length} tiliotetta
           </p>
         </div>
-        <Link
-          href="/bank-statements/new"
-          className="flex items-center gap-1.5 bg-accent hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Lisää tiliote
-        </Link>
+        <BankStatementImportButton bankAccounts={bankAccounts} />
       </div>
 
       <BankStatementsList statements={statements} />
