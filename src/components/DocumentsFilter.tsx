@@ -10,7 +10,13 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { CalendarDays, ChevronRight, ReceiptText } from 'lucide-react';
+import {
+  CalendarDays,
+  ChevronRight,
+  Loader2,
+  ReceiptText,
+  Trash2,
+} from 'lucide-react';
 import { formatCurrency, formatDate, periodLabel } from '@/lib/accounting';
 import {
   formatAmountInputValue,
@@ -35,6 +41,7 @@ import {
   DOCUMENT_EXPAND_COLUMN_WIDTH,
 } from '@/hooks/useColumnResize';
 import { useDocumentEditing } from '@/hooks/useDocumentEditing';
+import { deleteDocumentsAction } from '@/actions/app-actions';
 import type { AccountOption } from '@/lib/types';
 
 type SortKey = 'number' | 'date' | 'description' | 'debitTotal';
@@ -94,6 +101,9 @@ export default function DocumentsFilter({
   const [month, setMonth] = useState('all');
   const [showMissingReceiptsOnly, setShowMissingReceiptsOnly] = useState(false);
   const [sort, setSort] = useState<SortState<SortKey> | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState('');
 
   const requestedDocumentId = useMemo(() => {
     const value = Number(searchParams.get('document'));
@@ -252,12 +262,28 @@ export default function DocumentsFilter({
     });
   }, [filtered, sort]);
 
+  const selectedDocuments = useMemo(
+    () => sorted.filter((doc) => selectedIds.has(doc.id)),
+    [selectedIds, sorted],
+  );
+  const hasSelection = selectedDocuments.length > 0;
+  const allSelected =
+    sorted.length > 0 && sorted.every((doc) => selectedIds.has(doc.id));
+
   const activeDocumentId = useMemo(() => {
     if (requestedDocumentId == null) return null;
     return sorted.some((doc) => doc.id === requestedDocumentId)
       ? requestedDocumentId
       : null;
   }, [requestedDocumentId, sorted]);
+
+  useEffect(() => {
+    setSelectedIds((current) => {
+      const validIds = new Set(sorted.map((doc) => doc.id));
+      const next = new Set([...current].filter((id) => validIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [sorted]);
 
   useEffect(() => {
     if (requestedDocumentId == null) return;
@@ -280,6 +306,79 @@ export default function DocumentsFilter({
     search.trim().length > 0 || month !== 'all' || showMissingReceiptsOnly;
   const showFilteredCount =
     hasActiveFilters && filtered.length !== documentsWithResolvedLabels.length;
+  const selectionDisabled = periodLocked || isDeletingSelected;
+
+  const toggleSelection = (documentId: number) => {
+    if (selectionDisabled) {
+      return;
+    }
+
+    setBulkDeleteError('');
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(documentId)) {
+        next.delete(documentId);
+      } else {
+        next.add(documentId);
+      }
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectionDisabled) {
+      return;
+    }
+
+    setBulkDeleteError('');
+    if (allSelected) {
+      setSelectedIds(new Set());
+      return;
+    }
+
+    setSelectedIds(new Set(sorted.map((doc) => doc.id)));
+  };
+
+  const handleDeleteSelected = async () => {
+    if (periodLocked) {
+      setBulkDeleteError('Lukitun tilikauden tositteita ei voi poistaa.');
+      return;
+    }
+
+    if (!hasSelection) {
+      setBulkDeleteError('Valitse vähintään yksi tosite poistettavaksi.');
+      return;
+    }
+
+    const confirmMessage = [
+      `Poistetaanko ${selectedDocuments.length} valittua tositetta?`,
+      '',
+      'Valittujen tositteiden viennit ja mahdolliset PDF-linkitykset poistetaan.',
+    ].join('\n');
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsDeletingSelected(true);
+    setBulkDeleteError('');
+
+    try {
+      await deleteDocumentsAction({
+        documentIds: selectedDocuments.map((document) => document.id),
+      });
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch (error) {
+      setBulkDeleteError(
+        error instanceof Error
+          ? error.message
+          : 'Tositteiden poisto epäonnistui.',
+      );
+    } finally {
+      setIsDeletingSelected(false);
+    }
+  };
 
   return (
     <>
@@ -333,6 +432,42 @@ export default function DocumentsFilter({
             ) : null}
           </div>
 
+          {(hasSelection || bulkDeleteError) && (
+            <div className="rounded-xl border border-border-subtle bg-surface-2/50 p-4">
+              {bulkDeleteError && (
+                <div className="mb-3 rounded-lg border border-red-700/50 bg-red-900/20 px-4 py-3 text-sm text-rose-300">
+                  {bulkDeleteError}
+                </div>
+              )}
+
+              {hasSelection && (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-medium text-text-primary">
+                      {selectedDocuments.length} tositetta valittu
+                    </div>
+                    <div className="mt-1 text-xs text-text-secondary">
+                      Poista valitut tositteet kerralla.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteSelected()}
+                    disabled={selectionDisabled}
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-text-muted"
+                  >
+                    {isDeletingSelected ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    Poista valitut
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className={'card-panel overflow-hidden'}>
             <div className="overflow-x-auto">
               <table
@@ -342,6 +477,7 @@ export default function DocumentsFilter({
                 }}
               >
                 <colgroup>
+                  <col style={{ width: 44 }} />
                   <col style={{ width: DOCUMENT_EXPAND_COLUMN_WIDTH }} />
                   <col style={{ width: columnWidths.number }} />
                   <col style={{ width: columnWidths.date }} />
@@ -352,6 +488,18 @@ export default function DocumentsFilter({
                 </colgroup>
                 <thead>
                   <tr className="border-b border-white/8 bg-black/20">
+                    <th className="w-11 px-2 py-2 text-center">
+                      <label className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={toggleAll}
+                          aria-label="Valitse kaikki tositteet"
+                          className="h-4 w-4"
+                          disabled={selectionDisabled || sorted.length === 0}
+                        />
+                      </label>
+                    </th>
                     <th className="w-8" />
                     <SortableHeader
                       label="Nro"
@@ -573,10 +721,25 @@ export default function DocumentsFilter({
                           className={`group cursor-pointer transition-colors ${
                             isExpanded
                               ? 'bg-accent-muted hover:bg-accent/20'
+                              : selectedIds.has(doc.id)
+                                ? 'bg-surface-2/80 hover:bg-surface-3/70'
                               : 'hover:bg-white/4'
                           }`}
                           onClick={() => toggleExpand(doc.id)}
                         >
+                          <td className="px-2 py-1.5 text-center">
+                            <label className="inline-flex min-h-[32px] min-w-[32px] cursor-pointer items-center justify-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(doc.id)}
+                                onChange={() => toggleSelection(doc.id)}
+                                onClick={(event) => event.stopPropagation()}
+                                aria-label={`Valitse tosite ${doc.code}`}
+                                className="h-4 w-4"
+                                disabled={selectionDisabled}
+                              />
+                            </label>
+                          </td>
                           <td className="w-7 py-1.5 pl-2.5 pr-0">
                             <ChevronRight
                               className={`h-3.5 w-3.5 text-text-muted transition-transform duration-150 ${
@@ -705,7 +868,7 @@ export default function DocumentsFilter({
                         </tr>
                         {isExpanded && (
                           <tr>
-                            <td colSpan={7} className="p-0">
+                            <td colSpan={8} className="p-0">
                               <DocumentExpandedRow
                                 doc={doc}
                                 periodId={periodId}

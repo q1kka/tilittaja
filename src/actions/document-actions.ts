@@ -32,6 +32,7 @@ import {
 import { runDbAction } from '@/actions/_helpers';
 import {
   documentCreateSchema,
+  documentBulkDeleteSchema,
   documentUpdateSchema,
   documentEntriesUpdateSchema,
   entryDescriptionSchema,
@@ -410,6 +411,24 @@ export async function deleteDocumentAction(documentId: number) {
     revalidateApp();
     return { ok: true };
   }, 'Tositteen poisto epäonnistui.');
+}
+
+export async function deleteDocumentsAction(input: unknown) {
+  const parsed = documentBulkDeleteSchema.parse(input);
+
+  return runDbAction(() => {
+    for (const documentId of parsed.documentIds) {
+      const document = requireResource(
+        getDocument(documentId),
+        'Tositetta ei löytynyt',
+      );
+      requireUnlockedDocumentPeriod(document);
+      deleteDocument(documentId);
+    }
+
+    revalidateApp();
+    return { ok: true, deletedCount: parsed.documentIds.length };
+  }, 'Tositteiden poisto epäonnistui.');
 }
 
 export async function updateEntryDescriptionAction(

@@ -96,6 +96,7 @@ import {
   mergeBankStatementsAction,
   importStateTransferAction,
   deleteDocumentAction,
+  deleteDocumentsAction,
   updateEntryAccountAction,
   setPeriodLockAction,
 } from './app-actions';
@@ -455,6 +456,23 @@ describe('deleteDocumentAction', () => {
     await expect(deleteDocumentAction(999)).rejects.toThrow(
       'Tositetta ei löytynyt',
     );
+  });
+});
+
+describe('deleteDocumentsAction', () => {
+  it('deletes every selected document', async () => {
+    dbMocks.getDocument.mockImplementation((id: number) => ({
+      id,
+      period_id: 1,
+      date: Date.UTC(2025, 0, id),
+    }));
+
+    const result = await deleteDocumentsAction({ documentIds: [1, 2, 3] });
+
+    expect(result).toEqual({ ok: true, deletedCount: 3 });
+    expect(dbMocks.deleteDocument).toHaveBeenNthCalledWith(1, 1);
+    expect(dbMocks.deleteDocument).toHaveBeenNthCalledWith(2, 2);
+    expect(dbMocks.deleteDocument).toHaveBeenNthCalledWith(3, 3);
   });
 });
 

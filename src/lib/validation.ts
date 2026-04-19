@@ -53,6 +53,12 @@ export const documentUpdateSchema = z.object({
   name: z.string().trim(),
 });
 
+export const documentBulkDeleteSchema = z.object({
+  documentIds: z.array(positiveInt).min(1, {
+    error: 'Valitse vähintään yksi tosite',
+  }),
+});
+
 export const documentEntriesUpdateSchema = z.object({
   entries: z
     .array(

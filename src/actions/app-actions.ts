@@ -15,6 +15,7 @@ export {
   saveDocumentEntriesAction,
   duplicateDocumentAction,
   deleteDocumentAction,
+  deleteDocumentsAction,
   updateDocumentReceiptAction,
   uploadDocumentReceiptAction,
   deleteDocumentReceiptAction,
