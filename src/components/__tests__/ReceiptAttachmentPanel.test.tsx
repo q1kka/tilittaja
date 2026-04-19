@@ -72,4 +72,38 @@ describe('ReceiptAttachmentPanel', () => {
       'manual',
     );
   });
+
+  it('opens the receipt preview in a full-screen modal', async () => {
+    render(
+      <ReceiptAttachmentPanel
+        documentId={5}
+        documentNumber={7}
+        initialReceiptPath="tositteet/2025-2025/MU-7.pdf"
+        initialReceiptSource="manual"
+      />,
+    );
+
+    expect(screen.getByTitle('Tosite 7 PDF')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Avaa suurempana/i }));
+
+    expect(
+      await screen.findByRole('dialog', {
+        name: /Tositteen 7 PDF-esikatselu/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle('Tosite 7 PDF (laajennettu)')).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Sulje PDF-esikatselu/i }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTitle('Tosite 7 PDF (laajennettu)'),
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByTitle('Tosite 7 PDF')).toBeInTheDocument();
+  });
 });

@@ -7,6 +7,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ExternalLink,
   Loader2,
@@ -19,6 +20,7 @@ import {
   updateDocumentReceiptAction,
   uploadDocumentReceiptAction,
 } from '@/actions/app-actions';
+import { useModalA11y } from '@/hooks/useModalA11y';
 import { buildPdfPreviewSrc } from '@/lib/pdf-preview';
 import type { ReceiptSource } from '@/lib/receipt-pdfs';
 
@@ -67,6 +69,67 @@ function isReceiptPayload(payload: unknown): payload is ReceiptPayload {
   return hasValidPath && hasValidSource;
 }
 
+interface ReceiptPreviewModalProps {
+  documentNumber: number;
+  previewSrc: string;
+  onClose: () => void;
+}
+
+function ReceiptPreviewModal({
+  documentNumber,
+  previewSrc,
+  onClose,
+}: ReceiptPreviewModalProps) {
+  const { containerRef, handleKeyDown } = useModalA11y(onClose);
+
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm p-4 md:p-8"
+      onClick={onClose}
+      onKeyDown={handleKeyDown}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Tositteen ${documentNumber} PDF-esikatselu`}
+        className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface-0"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-4 border-b border-border-subtle px-4 py-3">
+          <div>
+            <div className="text-sm font-medium text-text-primary">
+              Tosite #{documentNumber}
+            </div>
+            <div className="mt-1 text-xs text-text-secondary">
+              PDF-esikatselu koko näytöllä
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-text-secondary transition hover:text-text-primary"
+            aria-label="Sulje PDF-esikatselu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <iframe
+          title={`Tosite ${documentNumber} PDF (laajennettu)`}
+          src={previewSrc}
+          className="min-h-0 flex-1 bg-white"
+        />
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export default function ReceiptAttachmentPanel({
   documentId,
   documentNumber,
@@ -90,6 +153,7 @@ export default function ReceiptAttachmentPanel({
     null,
   );
   const [isDragging, setIsDragging] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const saving = pendingAction !== null;
 
@@ -98,12 +162,15 @@ export default function ReceiptAttachmentPanel({
     setReceiptSource(initialReceiptSource);
   }, [initialReceiptPath, initialReceiptSource]);
 
+  useEffect(() => {
+    if (!receiptPath) {
+      setIsPreviewOpen(false);
+    }
+  }, [receiptPath]);
+
   const currentPreviewSrc = receiptPath
     ? buildPdfPreviewSrc(`/api/receipts/pdf?documentId=${documentId}`)
     : null;
-  const previewKey = receiptPath
-    ? `${documentId}:${receiptPath}`
-    : `empty:${documentId}`;
 
   const persistReceiptPath = async (nextReceiptPath: string | null) => {
     setPendingAction('link');
@@ -280,8 +347,26 @@ export default function ReceiptAttachmentPanel({
 
       {currentPreviewSrc ? (
         <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface-2/70 shadow-[0_18px_48px_-32px_rgba(0,0,0,0.7)]">
+          <div className="flex flex-col gap-4 border-b border-border-subtle p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-text-muted">
+                PDF-esikatselu
+              </div>
+              <div className="mt-1 text-sm text-text-secondary">
+                Näytä liitetty tosite tässä tai avaa se suurempana.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(true)}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border-subtle bg-surface-0/70 px-4 py-2 text-sm font-medium text-text-primary transition hover:border-accent/30 hover:bg-surface-0 hover:text-accent-light"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Avaa suurempana
+            </button>
+          </div>
+
           <iframe
-            key={previewKey}
             title={`Tosite ${documentNumber} PDF`}
             src={currentPreviewSrc}
             className="aspect-210/297 max-h-[72vh] w-full bg-white"
@@ -397,6 +482,14 @@ export default function ReceiptAttachmentPanel({
           </div>
         </div>
       )}
+
+      {isPreviewOpen && currentPreviewSrc ? (
+        <ReceiptPreviewModal
+          documentNumber={documentNumber}
+          previewSrc={currentPreviewSrc}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
