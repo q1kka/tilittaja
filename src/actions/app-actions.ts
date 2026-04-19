@@ -34,6 +34,7 @@ export {
   updateCompanyInfoAction,
   updateTilinpaatosMetadataAction,
   setPeriodLockAction,
+  generateRecurringRentDocumentsAction,
 } from './settings-actions';
 
 export {

@@ -99,6 +99,10 @@ export const periodLockSchema = z.object({
   locked: z.boolean(),
 });
 
+export const recurringRentGenerateSchema = z.object({
+  periodId: positiveInt,
+});
+
 export const bankStatementEntryLinkSchema = z.object({
   entryId: positiveInt,
   documentId: positiveInt.nullable(),

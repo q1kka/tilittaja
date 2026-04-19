@@ -261,6 +261,29 @@ export default async function SettingsPage({
           <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-0/35 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
+                Vuokrat
+              </p>
+              <h2 className="mt-2 text-lg font-semibold text-text-primary">
+                Kuukausivuokrien tositekopiot
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
+                Luo tammikuun vuokrasopimus-tositteista puuttuvat kuukausikopiot
+                koko kaudelle, jotta AI-linkitys loytaa valmiit tositteet
+                tiliotteelta.
+              </p>
+            </div>
+            <Link
+              href="/settings/recurring-rent"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-0/60 px-4 py-2.5 text-sm font-medium text-text-primary transition hover:border-accent/30 hover:text-accent-light"
+            >
+              Avaa vuokratyokalu
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-0/35 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
                 Varmuuskopiointi
               </p>
               <h2 className="mt-2 text-lg font-semibold text-text-primary">

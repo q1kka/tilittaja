@@ -11,6 +11,7 @@ import { runDbAction } from '@/actions/_helpers';
 import {
   companyInfoSchema,
   periodLockSchema,
+  recurringRentGenerateSchema,
   tilinpaatosMetadataSchema,
 } from '@/lib/validation';
 import { requireResource } from '@/lib/api-helpers';
@@ -20,6 +21,8 @@ import {
   normalizeDischargeTarget,
   type TilinpaatosMetadata,
 } from '@/lib/tilinpaatos';
+import { requireUnlockedExistingPeriod } from '@/lib/period-locks';
+import { createRecurringRentDocuments } from '@/lib/recurring-rent';
 
 function revalidateApp(): void {
   revalidatePath('/', 'layout');
@@ -27,6 +30,7 @@ function revalidateApp(): void {
   revalidatePath('/accounts');
   revalidatePath('/bank-statements');
   revalidatePath('/settings');
+  revalidatePath('/settings/recurring-rent');
   revalidatePath('/vat');
   revalidatePath('/reports/tilinpaatos');
 }
@@ -90,4 +94,15 @@ export async function setPeriodLockAction(periodId: number, locked: boolean) {
     revalidateApp();
     return { ok: true, locked: parsed.locked };
   }, 'Tilikauden lukituksen tallennus epäonnistui.');
+}
+
+export async function generateRecurringRentDocumentsAction(input: unknown) {
+  const parsed = recurringRentGenerateSchema.parse(input);
+
+  return runDbAction(() => {
+    requireUnlockedExistingPeriod(parsed.periodId);
+    const result = createRecurringRentDocuments(parsed.periodId);
+    revalidateApp();
+    return result;
+  }, 'Kuukausivuokrien tositteiden luonti epäonnistui.');
 }
