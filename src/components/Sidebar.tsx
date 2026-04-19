@@ -202,6 +202,15 @@ export default function Sidebar({
           href={buildHref('/settings/export-import')}
         />
         <NavLink
+          item={{
+            name: 'Tilikauden avaus',
+            href: '/settings/opening-balance-import',
+            icon: FileText,
+          }}
+          active={isActive('/settings/opening-balance-import')}
+          href={buildHref('/settings/opening-balance-import')}
+        />
+        <NavLink
           item={{ name: 'Tilikartta', href: '/accounts', icon: List }}
           active={isActive('/accounts')}
           href={buildHref('/accounts')}

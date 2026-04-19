@@ -62,6 +62,13 @@ export default async function SettingsPage({
 
           <div className="flex flex-wrap gap-3">
             <Link
+              href="/settings/opening-balance-import"
+              className="inline-flex items-center gap-2 self-start rounded-xl border border-border-subtle bg-surface-0/60 px-4 py-2.5 text-sm font-medium text-text-primary transition hover:border-accent/30 hover:text-accent-light"
+            >
+              Tilikauden avaus
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+            <Link
               href="/settings/export-import"
               className="inline-flex items-center gap-2 self-start rounded-xl border border-border-subtle bg-surface-0/60 px-4 py-2.5 text-sm font-medium text-text-primary transition hover:border-accent/30 hover:text-accent-light"
             >
@@ -229,6 +236,28 @@ export default async function SettingsPage({
         </div>
 
         <section className="rounded-2xl border border-border-subtle bg-surface-2/55 p-6 shadow-[0_28px_90px_-54px_rgba(0,0,0,0.95)] backdrop-blur-sm">
+          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-0/35 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
+                Avaustyokalut
+              </p>
+              <h2 className="mt-2 text-lg font-semibold text-text-primary">
+                Tilikauden avaus PDF-aineistosta
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-text-secondary">
+                Tuo aiemman tilinpaatoksen PDF-materiaalit ja muodosta valitun
+                kauden alkusaldot automaattisesti avaus-tositteeksi.
+              </p>
+            </div>
+            <Link
+              href="/settings/opening-balance-import"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-subtle bg-surface-0/60 px-4 py-2.5 text-sm font-medium text-text-primary transition hover:border-accent/30 hover:text-accent-light"
+            >
+              Avaa tyokalu
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
+
           <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border-subtle bg-surface-0/35 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
