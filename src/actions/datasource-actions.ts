@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import {
   closeDbConnection,
@@ -9,6 +8,7 @@ import {
 } from '@/lib/db';
 import { datasourceSchema } from '@/lib/validation';
 import { createNewDatabase, linkExternalDatabase } from '@/lib/db/bootstrap';
+import type { StateTransferImportSuccess } from '@/lib/import-types';
 import {
   importStateArchiveAsNewSource,
   readImportedStateArchive,
@@ -18,16 +18,8 @@ import {
   setupNewDatabaseSchema,
 } from '@/lib/validation';
 import { getEnv } from '@/lib/env';
-
-function revalidateApp(): void {
-  revalidatePath('/', 'layout');
-  revalidatePath('/documents');
-  revalidatePath('/accounts');
-  revalidatePath('/bank-statements');
-  revalidatePath('/settings');
-  revalidatePath('/vat');
-  revalidatePath('/reports/tilinpaatos');
-}
+import { slugifyDataSourceName } from '@/lib/datasource-slug';
+import { revalidateApp } from '@/actions/_helpers';
 
 async function setDatasourceCookie(slug: string): Promise<void> {
   const env = getEnv();
@@ -40,17 +32,6 @@ async function setDatasourceCookie(slug: string): Promise<void> {
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 365,
   });
-}
-
-function slugify(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[äå]/g, 'a')
-      .replace(/ö/g, 'o')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'kirjanpito'
-  );
 }
 
 export async function setDatasourceAction(input: unknown) {
@@ -68,7 +49,9 @@ export async function setDatasourceAction(input: unknown) {
   return { ok: true };
 }
 
-export async function importStateTransferAction(file: File) {
+export async function importStateTransferAction(
+  file: File,
+): Promise<StateTransferImportSuccess> {
   if (!(file instanceof File)) {
     throw new Error('Valitse ZIP-paketti.');
   }
@@ -99,7 +82,7 @@ export async function setupCreateNewDatabaseAction(input: unknown) {
   const year = parsed.periodYear || new Date().getFullYear();
   const startDate = new Date(year, 0, 1).getTime();
   const endDate = new Date(year, 11, 31).getTime();
-  const slug = slugify(parsed.companyName);
+  const slug = slugifyDataSourceName(parsed.companyName);
 
   createNewDatabase(slug, {
     companyName: parsed.companyName.trim(),
@@ -115,7 +98,7 @@ export async function setupCreateNewDatabaseAction(input: unknown) {
 
 export async function setupLinkExternalDatabaseAction(input: unknown) {
   const parsed = setupExternalDatabaseSchema.parse(input);
-  const slug = slugify(parsed.name || 'ulkoinen');
+  const slug = slugifyDataSourceName(parsed.name || 'ulkoinen');
 
   linkExternalDatabase(parsed.filePath.trim(), slug);
   await setDatasourceCookie(slug);

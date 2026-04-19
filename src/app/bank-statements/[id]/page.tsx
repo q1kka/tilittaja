@@ -8,7 +8,6 @@ import {
   getEntriesForPeriod,
   getDocumentReceiptLinks,
   getPeriods,
-  getSettings,
   requireCurrentDataSource,
   runWithResolvedDb,
 } from '@/lib/db';
@@ -41,10 +40,9 @@ export default async function BankStatementDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { entries, settings, periods } = await runWithResolvedDb(
+  const { entries, periods } = await runWithResolvedDb(
     () => ({
       entries: getBankStatementEntries(statementId),
-      settings: getSettings(),
       periods: getPeriods(),
     }),
   );

@@ -23,7 +23,7 @@ interface PickerEntry {
   amount: number;
 }
 
-export interface DocumentPickerModalProps {
+interface DocumentPickerModalProps {
   entry: PickerEntry;
   periodId: number;
   documentSearch: string;

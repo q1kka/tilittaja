@@ -15,7 +15,7 @@ interface ParsedLegacyLabel {
   name: string;
 }
 
-export interface ResolvedDocumentLabel {
+interface ResolvedDocumentLabel {
   category: string;
   name: string;
   code: string;

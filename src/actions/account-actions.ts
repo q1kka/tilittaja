@@ -1,28 +1,17 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import {
   cloneAccount,
   createAccount,
   deleteAccount,
   updateAccount,
 } from '@/lib/db';
-import { runDbAction } from '@/actions/_helpers';
+import { revalidateApp, runDbAction } from '@/actions/_helpers';
 import {
   accountCloneSchema,
   accountFormSchema,
 } from '@/lib/validation';
 import { ApiRouteError } from '@/lib/api-helpers';
-
-function revalidateApp(): void {
-  revalidatePath('/', 'layout');
-  revalidatePath('/documents');
-  revalidatePath('/accounts');
-  revalidatePath('/bank-statements');
-  revalidatePath('/settings');
-  revalidatePath('/vat');
-  revalidatePath('/reports/tilinpaatos');
-}
 
 export async function createAccountAction(input: unknown) {
   const parsed = accountFormSchema.parse(input);

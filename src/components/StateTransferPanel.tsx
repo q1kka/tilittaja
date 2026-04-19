@@ -13,21 +13,11 @@ import {
   Upload,
 } from 'lucide-react';
 import { importStateTransferAction } from '@/actions/app-actions';
+import type { StateTransferImportSuccess } from '@/lib/import-types';
 
 interface StateTransferPanelProps {
   sourceSlug: string;
   sourceName: string;
-}
-
-interface ImportResponse {
-  ok: true;
-  source: string;
-  fileCount: number;
-  restoredAt: string;
-  manifest: {
-    sourceName: string;
-    createdAt: string;
-  };
 }
 
 function formatBytes(bytes: number): string {
@@ -56,7 +46,7 @@ export default function StateTransferPanel({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<ImportResponse | null>(null);
+  const [success, setSuccess] = useState<StateTransferImportSuccess | null>(null);
 
   const selectedFileLabel = useMemo(() => {
     if (!selectedFile) return null;
@@ -80,7 +70,7 @@ export default function StateTransferPanel({
 
     try {
       const data = await importStateTransferAction(selectedFile);
-      setSuccess(data as ImportResponse);
+      setSuccess(data);
       setSelectedFile(null);
       router.refresh();
     } catch (importError) {

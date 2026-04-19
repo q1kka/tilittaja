@@ -65,7 +65,7 @@ Do not add comments that just narrate what the code does. Comments should only e
 
 ### Data Flow
 
-1. **Pages** (RSC) call `initDb()` and query functions from `src/lib/db/`
+1. **Pages** (RSC) call `runWithResolvedDb()` and query functions from `src/lib/db/`
 2. **Mutations** go through either Server Actions (`src/actions/`) or API routes (`src/app/api/`)
 3. **Client components** use custom hooks from `src/hooks/` for interactive behavior
 4. **API routes** use the `withDb` helper from `src/lib/api-helpers.ts` for database access

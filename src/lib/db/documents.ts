@@ -114,7 +114,7 @@ export function setPeriodLocked(periodId: number, locked: boolean): void {
     .run(locked ? 1 : 0, periodId);
 }
 
-export interface DocumentBalanceInfo {
+interface DocumentBalanceInfo {
   document_id: number;
   document_number: number;
   document_date: number;

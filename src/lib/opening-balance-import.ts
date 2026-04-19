@@ -3,24 +3,33 @@ import { createRequire } from 'module';
 import path from 'path';
 import { PDFDocument } from 'pdf-lib';
 import { z } from 'zod';
-import { ApiRouteError, requireResource } from '@/lib/api-helpers';
-import { resolveDocumentLabels } from '@/lib/document-labels';
 import {
-  createAccount,
+  ApiRouteError,
+  readJsonResponse,
+  requireResource,
+} from '@/lib/api-helpers';
+import { resolveDocumentLabels } from '@/lib/document-labels';
+import { getDb, requireCurrentDataSource } from '@/lib/db/connection';
+import { createAccount } from '@/lib/db/accounts';
+import {
   createDocument,
   createEntry,
   deleteDocument,
   getAccounts,
-  getDb,
-  getDocumentMetadataMap,
   getDocuments,
   getEntriesForPeriod,
   getPeriod,
-  requireCurrentDataSource,
+} from '@/lib/db/documents';
+import {
+  getDocumentMetadataMap,
   setDocumentReceiptLink,
   updateDocumentMetadata,
-} from '@/lib/db';
+} from '@/lib/db/metadata-receipts';
 import { getEnv } from '@/lib/env';
+import type {
+  PdfParseConstructor,
+  PdfParseResult,
+} from '@/lib/pdf-parse-types';
 import { getPdfRoot } from '@/lib/receipt-pdfs';
 import { Account, AccountType } from '@/lib/types';
 
@@ -47,23 +56,13 @@ const aiOpeningBalanceSchema = z.object({
 
 type AiOpeningBalance = z.infer<typeof aiOpeningBalanceSchema>;
 
-type PdfParseResult = { text?: string };
-interface PdfParseInstance {
-  getText(): Promise<PdfParseResult>;
-  destroy(): Promise<void>;
-}
-
-type PdfParseConstructor = new (options: {
-  data: Buffer | Uint8Array;
-}) => PdfParseInstance;
-
-export interface ImportedOpeningBalanceAccount {
+interface ImportedOpeningBalanceAccount {
   number: string;
   name: string;
   balance: number;
 }
 
-export interface ImportedOpeningBalance {
+interface ImportedOpeningBalance {
   companyName: string | null;
   businessId: string | null;
   previousPeriodEnd: number;
@@ -72,7 +71,7 @@ export interface ImportedOpeningBalance {
   notes: string[];
 }
 
-export interface PlannedOpeningBalanceEntry {
+interface PlannedOpeningBalanceEntry {
   accountNumber: string;
   accountName: string;
   accountType: AccountType;
@@ -82,13 +81,13 @@ export interface PlannedOpeningBalanceEntry {
   existingAccountId: number | null;
 }
 
-export interface PlannedOpeningBalanceAccount {
+interface PlannedOpeningBalanceAccount {
   number: string;
   name: string;
   type: AccountType;
 }
 
-export interface OpeningBalancePlan {
+interface OpeningBalancePlan {
   entries: PlannedOpeningBalanceEntry[];
   missingAccounts: PlannedOpeningBalanceAccount[];
   debitTotal: number;
@@ -101,7 +100,7 @@ interface OpeningBalanceTargetAccount {
   type: AccountType;
 }
 
-export interface ImportedOpeningBalanceFile {
+interface ImportedOpeningBalanceFile {
   fileName: string;
   buffer: Buffer;
 }
@@ -211,7 +210,7 @@ function isBalanceSheetAccountNumber(accountNumber: string): boolean {
   return Number.isInteger(parsed) && parsed >= 1000 && parsed <= 2999;
 }
 
-export function inferOpeningBalanceAccountType(
+function inferOpeningBalanceAccountType(
   accountNumber: string,
 ): AccountType {
   const number = Number.parseInt(accountNumber, 10);
@@ -296,12 +295,10 @@ async function ensurePdfJsWorkerGlobal(workerPath: string): Promise<void> {
     return;
   }
 
-  const workerModule = (await import(
+  const workerModule: Partial<PdfJsWorkerState> = await import(
     /* webpackIgnore: true */
     workerPath
-  )) as {
-    WorkerMessageHandler?: unknown;
-  };
+  );
 
   globalThis.pdfjsWorker = {
     WorkerMessageHandler: workerModule.WorkerMessageHandler,
@@ -498,7 +495,10 @@ async function requestOpeningBalanceJson(
     }),
   });
 
-  const payload = await response.json().catch(() => null);
+  const payload = await readJsonResponse(
+    response,
+    'OpenAI API palautti virheellistä JSON-dataa',
+  );
   if (!response.ok) {
     const apiMessage =
       payload &&
@@ -517,7 +517,7 @@ async function requestOpeningBalanceJson(
   return extractResponseText(payload);
 }
 
-export async function extractImportedOpeningBalanceFromPdfs(
+async function extractImportedOpeningBalanceFromPdfs(
   files: ImportedOpeningBalanceFile[],
 ): Promise<ImportedOpeningBalance> {
   if (files.length === 0) {

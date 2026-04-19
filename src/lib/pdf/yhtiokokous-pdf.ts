@@ -107,7 +107,6 @@ export async function buildYhtiokokousPdf(
 
   const periodShort = formatPeriodForMinutes(pkg.periodStart, pkg.periodEnd);
 
-  // ── HEADER ──────────────────────────────────────────────────────────────
   const headerY = 50;
   doc
     .font('Helvetica-Bold')
@@ -133,11 +132,9 @@ export async function buildYhtiokokousPdf(
   }
   doc.moveDown(0.8);
 
-  // ── TITLE ───────────────────────────────────────────────────────────────
   doc.font('Helvetica-Bold').fontSize(12).text('PÖYTÄKIRJA');
   doc.moveDown(0.6);
 
-  // ── MEETING INFO ─────────────────────────────────────────────────────────
   const infoFont = 'Helvetica';
   const colSplit = 100;
 
@@ -163,7 +160,6 @@ export async function buildYhtiokokousPdf(
   }
   doc.moveDown(0.8);
 
-  // ── SECTIONS ─────────────────────────────────────────────────────────────
   const sectionGap = 0.6;
   const sectionNumberWidth = 24;
 
@@ -225,7 +221,6 @@ export async function buildYhtiokokousPdf(
     'Koska muita asioita ei ollut, puheenjohtaja päätti kokouksen.',
   );
 
-  // ── SIGNATURE ────────────────────────────────────────────────────────────
   doc.moveDown(0.5);
   doc
     .font('Helvetica')
@@ -236,7 +231,6 @@ export async function buildYhtiokokousPdf(
     .fontSize(10)
     .text((pkg.metadata.signerTitle || 'hallituksen jäsen').toLowerCase());
 
-  // ── ATTACHMENT REFERENCE ─────────────────────────────────────────────────
   doc.moveDown(1);
   doc
     .moveTo(L, doc.y)

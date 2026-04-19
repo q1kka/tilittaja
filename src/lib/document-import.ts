@@ -1,8 +1,13 @@
 import { createRequire } from 'module';
 import path from 'path';
 import { z } from 'zod';
-import { ApiRouteError } from '@/lib/api-helpers';
+import { ApiRouteError, readJsonResponse } from '@/lib/api-helpers';
 import { getEnv } from '@/lib/env';
+import type { ImportedDocumentDateResolution } from '@/lib/import-types';
+import type {
+  PdfParseConstructor,
+  PdfParseResult,
+} from '@/lib/pdf-parse-types';
 import { ACCOUNT_TYPES, type Account } from '@/lib/types';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
@@ -26,7 +31,7 @@ const aiDocumentSchema = z.object({
 
 type AiDocument = z.infer<typeof aiDocumentSchema>;
 
-export interface ImportedDocumentEntry {
+interface ImportedDocumentEntry {
   accountNumber: string;
   debit: boolean;
   amount: number;
@@ -34,36 +39,26 @@ export interface ImportedDocumentEntry {
   rowNumber: number;
 }
 
-export interface ImportedDocument {
+interface ImportedDocument {
   date: number | null;
   category: string;
   name: string;
   entries: ImportedDocumentEntry[];
 }
 
-export interface ComparableDocumentEntry {
+interface ComparableDocumentEntry {
   accountNumber: string;
   debit: boolean;
   amount: number;
   description: string;
 }
 
-export interface ComparableDocument {
+interface ComparableDocument {
   date: number;
   category: string;
   name: string;
   entries: ComparableDocumentEntry[];
 }
-
-type PdfParseResult = { text?: string };
-interface PdfParseInstance {
-  getText(): Promise<PdfParseResult>;
-  destroy(): Promise<void>;
-}
-
-type PdfParseConstructor = new (options: {
-  data: Buffer | Uint8Array;
-}) => PdfParseInstance;
 
 const requireFromNode = createRequire(import.meta.url);
 
@@ -104,12 +99,10 @@ async function ensurePdfJsWorkerGlobal(workerPath: string): Promise<void> {
     return;
   }
 
-  const workerModule = (await import(
+  const workerModule: Partial<PdfJsWorkerState> = await import(
     /* webpackIgnore: true */
     workerPath
-  )) as {
-    WorkerMessageHandler?: unknown;
-  };
+  );
 
   globalThis.pdfjsWorker = {
     WorkerMessageHandler: workerModule.WorkerMessageHandler,
@@ -388,11 +381,7 @@ export function resolveImportedDocumentDate(params: {
   importedDate: number | null;
   periodStart: number;
   periodEnd: number;
-}): {
-  date: number;
-  usedFallback: boolean;
-  fallbackReason: 'missing' | 'outside_period' | 'shifted_year' | null;
-} {
+}): ImportedDocumentDateResolution {
   const { importedDate, periodStart, periodEnd } = params;
 
   if (importedDate != null && importedDate >= periodStart && importedDate <= periodEnd) {
@@ -540,7 +529,10 @@ async function requestDocumentJson(params: {
     }),
   });
 
-  const payload = await response.json().catch(() => null);
+  const payload = await readJsonResponse(
+    response,
+    'OpenAI API palautti virheellistä JSON-dataa',
+  );
   if (!response.ok) {
     const apiMessage =
       payload &&

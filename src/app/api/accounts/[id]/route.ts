@@ -1,34 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   deleteAccountAction,
   updateAccountAction,
 } from '@/actions/app-actions';
-import { jsonActionError, requireRouteId } from '@/lib/api-helpers';
+import {
+  jsonActionRoute,
+  readRequestJson,
+  requireRouteId,
+} from '@/lib/api-helpers';
 import type { RouteIdParams } from '@/lib/types';
 
-export async function PATCH(
+export const PATCH = jsonActionRoute(async (
   request: NextRequest,
   { params }: RouteIdParams,
-) {
-  try {
-    const accountId = await requireRouteId(params, 'tilin tunniste');
-    const body = await request.json();
-    const updated = await updateAccountAction(accountId, body);
-    return NextResponse.json(updated);
-  } catch (error) {
-    return jsonActionError(error, 'Tilin päivitys epäonnistui');
-  }
-}
+) => {
+  const accountId = await requireRouteId(params, 'tilin tunniste');
+  const body = await readRequestJson(request);
+  return updateAccountAction(accountId, body);
+}, 'Tilin päivitys epäonnistui');
 
-export async function DELETE(
+export const DELETE = jsonActionRoute(async (
   _request: NextRequest,
   { params }: RouteIdParams,
-) {
-  try {
-    const accountId = await requireRouteId(params, 'tilin tunniste');
-    const result = await deleteAccountAction(accountId);
-    return NextResponse.json(result);
-  } catch (error) {
-    return jsonActionError(error, 'Tilin poisto epäonnistui');
-  }
-}
+) => {
+  const accountId = await requireRouteId(params, 'tilin tunniste');
+  return deleteAccountAction(accountId);
+}, 'Tilin poisto epäonnistui');

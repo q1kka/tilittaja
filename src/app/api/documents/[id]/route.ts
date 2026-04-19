@@ -1,34 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   deleteDocumentAction,
   updateDocumentAction,
 } from '@/actions/app-actions';
-import { jsonActionError, requireRouteId } from '@/lib/api-helpers';
+import {
+  jsonActionRoute,
+  readRequestJson,
+  requireRouteId,
+} from '@/lib/api-helpers';
 import type { RouteIdParams } from '@/lib/types';
 
-export async function PATCH(
+export const PATCH = jsonActionRoute(async (
   request: NextRequest,
   { params }: RouteIdParams,
-) {
-  try {
-    const documentId = await requireRouteId(params, 'tositteen tunniste');
-    const body = await request.json();
-    const document = await updateDocumentAction(documentId, body);
-    return NextResponse.json(document);
-  } catch (error) {
-    return jsonActionError(error, 'Tositteen päivitys epäonnistui');
-  }
-}
+) => {
+  const documentId = await requireRouteId(params, 'tositteen tunniste');
+  const body = await readRequestJson(request);
+  return updateDocumentAction(documentId, body);
+}, 'Tositteen päivitys epäonnistui');
 
-export async function DELETE(
+export const DELETE = jsonActionRoute(async (
   _request: NextRequest,
   { params }: RouteIdParams,
-) {
-  try {
-    const documentId = await requireRouteId(params, 'tositteen tunniste');
-    const result = await deleteDocumentAction(documentId);
-    return NextResponse.json(result);
-  } catch (error) {
-    return jsonActionError(error, 'Tositteen poisto epäonnistui');
-  }
-}
+) => {
+  const documentId = await requireRouteId(params, 'tositteen tunniste');
+  return deleteDocumentAction(documentId);
+}, 'Tositteen poisto epäonnistui');

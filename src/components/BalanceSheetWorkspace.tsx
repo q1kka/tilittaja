@@ -9,14 +9,6 @@ import {
 } from '@/lib/accounting';
 import type { AccountType, ReportRow } from '@/lib/types';
 
-export interface BalanceSheetAccount {
-  accountId: number;
-  accountNumber: string;
-  accountName: string;
-  accountType: AccountType;
-  balance: number;
-}
-
 export interface BalanceSheetEntry {
   id: number;
   document_id: number;

@@ -1,13 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { updateCompanyInfoAction } from '@/actions/app-actions';
-import { jsonActionError } from '@/lib/api-helpers';
+import { jsonActionRoute, readRequestJson } from '@/lib/api-helpers';
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const result = await updateCompanyInfoAction(body);
-    return NextResponse.json(result);
-  } catch (error) {
-    return jsonActionError(error, 'Yrityksen tietojen tallennus epäonnistui');
-  }
-}
+export const POST = jsonActionRoute(async (request: NextRequest) => {
+  const body = await readRequestJson(request);
+  return updateCompanyInfoAction(body);
+}, 'Yrityksen tietojen tallennus epäonnistui');

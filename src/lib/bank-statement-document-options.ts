@@ -2,7 +2,7 @@ import { resolveDocumentLabels } from '@/lib/document-labels';
 import type { ReceiptSource } from '@/lib/receipt-pdfs';
 import type { Document, DocumentMetadata } from '@/lib/types';
 
-export interface BankStatementDocumentOption {
+interface BankStatementDocumentOption {
   id: number;
   number: number;
   date: number;

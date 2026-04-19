@@ -1,7 +1,7 @@
 import { Account } from '../types';
 import { getDb } from './connection';
 
-export interface CreateAccountInput {
+interface CreateAccountInput {
   number: string;
   name: string;
   type: number;
@@ -12,7 +12,7 @@ export interface CreateAccountInput {
   flags?: number;
 }
 
-export interface UpdateAccountInput {
+interface UpdateAccountInput {
   number?: string;
   name?: string;
   type?: number;

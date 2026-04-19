@@ -13,23 +13,15 @@ import {
   X,
 } from 'lucide-react';
 import { useModalA11y } from '@/hooks/useModalA11y';
+import type {
+  BankStatementImportApiSuccess,
+  SelectedPdfImportFile,
+} from '@/lib/import-types';
 
 interface BankAccountOption {
   id: number;
   number: string;
   name: string;
-}
-
-interface ImportResult {
-  id: number;
-  created: number;
-  skipped: number;
-}
-
-interface SelectedImportFile {
-  key: string;
-  file: File;
-  label: string;
 }
 
 interface ImportOutcome {
@@ -49,7 +41,7 @@ interface Props {
 const folderInputProps = {
   directory: '',
   webkitdirectory: '',
-} as unknown as React.InputHTMLAttributes<HTMLInputElement>;
+} satisfies React.InputHTMLAttributes<HTMLInputElement>;
 
 function isPdfFile(file: File): boolean {
   return (
@@ -61,7 +53,7 @@ function getFileLabel(file: File): string {
   return file.webkitRelativePath || file.name;
 }
 
-function createSelectedImportFile(file: File): SelectedImportFile {
+function createSelectedImportFile(file: File): SelectedPdfImportFile {
   const label = getFileLabel(file);
   return {
     key: `${label}:${file.size}:${file.lastModified}`,
@@ -71,9 +63,9 @@ function createSelectedImportFile(file: File): SelectedImportFile {
 }
 
 function mergeSelectedFiles(
-  currentFiles: SelectedImportFile[],
+  currentFiles: SelectedPdfImportFile[],
   nextFiles: File[],
-): SelectedImportFile[] {
+): SelectedPdfImportFile[] {
   const merged = new Map(currentFiles.map((file) => [file.key, file]));
 
   nextFiles
@@ -94,7 +86,7 @@ function BankStatementImportModal({
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     bankAccounts[0]?.id ?? null,
   );
-  const [selectedFiles, setSelectedFiles] = useState<SelectedImportFile[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedPdfImportFile[]>([]);
   const [results, setResults] = useState<ImportOutcome[]>([]);
   const [progress, setProgress] = useState({ completed: 0, total: 0 });
   const [isImporting, setIsImporting] = useState(false);
@@ -166,7 +158,7 @@ function BankStatementImportModal({
             body: formData,
           });
           const payload = (await response.json().catch(() => null)) as
-            | ({ error?: string } & Partial<ImportResult>)
+            | ({ error?: string } & Partial<BankStatementImportApiSuccess>)
             | null;
 
           if (!response.ok || !payload?.id) {

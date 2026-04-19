@@ -1,12 +1,11 @@
 import type { Document, Entry, Period } from '@/lib/types';
 import {
-  getBankStatement,
-  getBankStatementEntry,
   getDocument,
   getEntry,
   getPeriod,
   getPeriods,
-} from '@/lib/db';
+} from '@/lib/db/documents';
+import { getBankStatement, getBankStatementEntry } from '@/lib/db/bank-statements';
 import { ApiRouteError, requireResource } from '@/lib/api-helpers';
 
 export const LOCKED_PERIOD_ERROR_MESSAGE =

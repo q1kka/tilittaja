@@ -1,15 +1,17 @@
 import {
   createDocument,
   createEntry,
-  getDb,
-  getDocumentMetadataMap,
-  getDocumentReceiptLinks,
   getDocuments,
   getEntriesForDocument,
   getPeriod,
+} from '@/lib/db/documents';
+import { getDb } from '@/lib/db/connection';
+import {
+  getDocumentMetadataMap,
+  getDocumentReceiptLinks,
   setDocumentReceiptLink,
   updateDocumentMetadata,
-} from '@/lib/db';
+} from '@/lib/db/metadata-receipts';
 
 const LEASE_KEYWORD = 'vuokrasopimus';
 
@@ -25,7 +27,7 @@ interface JanuaryLeaseRow {
   counterparty: string;
 }
 
-export interface RecurringRentMonthTarget {
+interface RecurringRentMonthTarget {
   key: string;
   label: string;
   date: number;

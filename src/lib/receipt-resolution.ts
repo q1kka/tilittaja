@@ -18,8 +18,6 @@ import {
 } from './db';
 import { resolveDocumentLabels } from './document-labels';
 
-export type { ReceiptSource };
-
 interface DocumentReceiptInfo {
   path: string | null;
   source: ReceiptSource;
@@ -66,7 +64,7 @@ function resolveDocumentReceipts(params: {
   return result;
 }
 
-export interface CollectedReceipt {
+interface CollectedReceipt {
   code: string;
   absolutePath: string;
 }

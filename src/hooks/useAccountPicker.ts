@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import type { AccountOption } from '@/lib/types';
 
-export interface UseAccountPickerOptions {
+interface UseAccountPickerOptions {
   accounts: AccountOption[];
   onConfirm: (entryId: number, accountId: number) => void;
 }

@@ -9,14 +9,14 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 
-export type DocumentColumnKey =
+type DocumentColumnKey =
   | 'number'
   | 'date'
   | 'description'
   | 'receipt'
   | 'statement'
   | 'amount';
-export type DocumentColumnWidths = Record<DocumentColumnKey, number>;
+type DocumentColumnWidths = Record<DocumentColumnKey, number>;
 
 const DOCUMENT_COLUMN_DEFAULT_WIDTHS: DocumentColumnWidths = {
   number: 72,
@@ -39,6 +39,15 @@ const DOCUMENT_COLUMN_MIN_WIDTHS: DocumentColumnWidths = {
 const DOCUMENT_COLUMN_STORAGE_KEY = 'documents-table-column-widths';
 export const DOCUMENT_EXPAND_COLUMN_WIDTH = 32;
 
+interface StoredDocumentColumnWidthsCandidate {
+  number?: unknown;
+  date?: unknown;
+  description?: unknown;
+  receipt?: unknown;
+  statement?: unknown;
+  amount?: unknown;
+}
+
 function clampDocumentColumnWidth(key: DocumentColumnKey, width: number) {
   return Math.max(DOCUMENT_COLUMN_MIN_WIDTHS[key], Math.round(width));
 }
@@ -51,6 +60,30 @@ function getStoredDocumentColumnWidth(
   return typeof value === 'number' && Number.isFinite(value)
     ? clampDocumentColumnWidth(key, value)
     : DOCUMENT_COLUMN_DEFAULT_WIDTHS[key];
+}
+
+function parseStoredDocumentColumnWidths(
+  storedWidths: string,
+): Partial<Record<DocumentColumnKey, number>> {
+  const parsed: unknown = JSON.parse(storedWidths);
+  if (!parsed || typeof parsed !== 'object') {
+    return {};
+  }
+
+  const candidate: StoredDocumentColumnWidthsCandidate = parsed;
+  return {
+    number:
+      typeof candidate.number === 'number' ? candidate.number : undefined,
+    date: typeof candidate.date === 'number' ? candidate.date : undefined,
+    description:
+      typeof candidate.description === 'number' ? candidate.description : undefined,
+    receipt:
+      typeof candidate.receipt === 'number' ? candidate.receipt : undefined,
+    statement:
+      typeof candidate.statement === 'number' ? candidate.statement : undefined,
+    amount:
+      typeof candidate.amount === 'number' ? candidate.amount : undefined,
+  };
 }
 
 export function useColumnResize() {
@@ -116,9 +149,7 @@ export function useColumnResize() {
         DOCUMENT_COLUMN_STORAGE_KEY,
       );
       if (storedWidths) {
-        const parsed = JSON.parse(storedWidths) as Partial<
-          Record<DocumentColumnKey, number>
-        >;
+        const parsed = parseStoredDocumentColumnWidths(storedWidths);
         setColumnWidths({
           number: getStoredDocumentColumnWidth(parsed, 'number'),
           date: getStoredDocumentColumnWidth(parsed, 'date'),

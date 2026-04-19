@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import {
   createDocument,
   createEntry,
@@ -8,21 +7,11 @@ import {
   getEntriesForPeriod,
   updateDocumentMetadata,
 } from '@/lib/db';
-import { runDbAction } from '@/actions/_helpers';
+import { revalidateApp, runDbAction } from '@/actions/_helpers';
 import { vatSettlementSchema } from '@/lib/validation';
 import { requireUnlockedTargetPeriod } from '@/lib/period-locks';
 import { buildVatSettlementPreview } from '@/lib/vat-report';
 import { ApiRouteError } from '@/lib/api-helpers';
-
-function revalidateApp(): void {
-  revalidatePath('/', 'layout');
-  revalidatePath('/documents');
-  revalidatePath('/accounts');
-  revalidatePath('/bank-statements');
-  revalidatePath('/settings');
-  revalidatePath('/vat');
-  revalidatePath('/reports/tilinpaatos');
-}
 
 export async function createVatSettlementAction(input: unknown) {
   const parsed = vatSettlementSchema.parse(input);

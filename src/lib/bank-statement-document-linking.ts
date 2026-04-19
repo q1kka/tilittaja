@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ApiRouteError } from '@/lib/api-helpers';
+import { ApiRouteError, readJsonResponse } from '@/lib/api-helpers';
 import { getEnv } from '@/lib/env';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
@@ -38,14 +38,14 @@ export interface BankStatementSuggestionDocumentInput {
   descriptions: string[];
 }
 
-export interface BankStatementDocumentLinkSuggestion {
+interface BankStatementDocumentLinkSuggestion {
   entryId: number;
   documentId: number | null;
   confidence: 'high' | 'medium' | 'low';
   rationale: string;
 }
 
-export interface BankStatementRecentLinkExampleInput {
+interface BankStatementRecentLinkExampleInput {
   entryDate: number;
   amount: number;
   counterparty: string;
@@ -485,7 +485,10 @@ async function requestSuggestionJson(params: {
     }),
   });
 
-  const payload = await response.json().catch(() => null);
+  const payload = await readJsonResponse(
+    response,
+    'OpenAI API palautti virheellistä JSON-dataa',
+  );
   if (!response.ok) {
     const apiMessage =
       payload &&

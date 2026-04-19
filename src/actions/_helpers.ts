@@ -1,8 +1,18 @@
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { resolveRequestDbPath, runWithRequestDb } from '@/lib/db/connection';
 import { ApiRouteError } from '@/lib/api-helpers';
 
 type ActionError = Error & { status?: number };
+
+const baseRevalidationPaths = [
+  '/documents',
+  '/accounts',
+  '/bank-statements',
+  '/settings',
+  '/vat',
+  '/reports/tilinpaatos',
+] as const;
 
 function formatZodError(error: z.ZodError): string {
   return error.issues[0]?.message || 'Virheellinen syöte.';
@@ -35,5 +45,13 @@ export async function runDbAction<T>(
     return await runWithRequestDb(dbPath, () => action());
   } catch (error) {
     throw formatActionError(error, fallbackMessage);
+  }
+}
+
+export function revalidateApp(extraPaths: string[] = []): void {
+  revalidatePath('/', 'layout');
+
+  for (const path of new Set([...baseRevalidationPaths, ...extraPaths])) {
+    revalidatePath(path);
   }
 }

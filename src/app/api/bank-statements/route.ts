@@ -6,6 +6,7 @@ import {
   bankStatementArchiveIdExists,
 } from '@/lib/db';
 import { withDb, jsonError } from '@/lib/api-helpers';
+import type { BankStatementImportApiSuccess } from '@/lib/import-types';
 import { bankStatementCreateSchema } from '@/lib/validation';
 
 export const POST = withDb(async (request: NextRequest) => {
@@ -64,5 +65,10 @@ export const POST = withDb(async (request: NextRequest) => {
     created++;
   }
 
-  return NextResponse.json({ id: statement.id, created, skipped });
+  const response: BankStatementImportApiSuccess = {
+    id: statement.id,
+    created,
+    skipped,
+  };
+  return NextResponse.json(response);
 }, 'Tiliotteen luonti epäonnistui');

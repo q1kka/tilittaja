@@ -16,7 +16,14 @@ import {
   setDocumentReceiptLink,
   updateDocumentMetadata,
 } from '@/lib/db';
-import { withDb, jsonError, requireResource } from '@/lib/api-helpers';
+import {
+  isMultipartRequest,
+  isPdfFile,
+  jsonError,
+  readRequestFormData,
+  requireResource,
+  withDb,
+} from '@/lib/api-helpers';
 import { getPdfRoot, resolvePdfRelativePath } from '@/lib/receipt-pdfs';
 import {
   extractImportedDocumentFromPdf,
@@ -24,15 +31,13 @@ import {
   resolveImportedDocumentDate,
   sanitizeImportedDocumentPdfName,
 } from '@/lib/document-import';
+import type {
+  DocumentImportApiSuccess,
+  ImportedDocumentDateResolution,
+} from '@/lib/import-types';
 import { requireUnlockedExistingPeriod } from '@/lib/period-locks';
 
 export const runtime = 'nodejs';
-
-interface ImportDateResolution {
-  date: number;
-  usedFallback: boolean;
-  fallbackReason: 'missing' | 'outside_period' | 'shifted_year' | null;
-}
 
 const uploadSchema = z.object({
   periodId: z.coerce
@@ -40,12 +45,6 @@ const uploadSchema = z.object({
     .int({ error: 'Valitse tilikausi' })
     .positive({ error: 'Valitse tilikausi' }),
 });
-
-function isPdfFile(file: File): boolean {
-  return (
-    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-  );
-}
 
 function getPeriodFolder(periodStart: number, periodEnd: number): string {
   const startYear = new Date(periodStart).getUTCFullYear();
@@ -145,15 +144,11 @@ function findDuplicateByContent(params: {
 }
 
 export const POST = withDb(async (request: NextRequest) => {
-  const contentType = request.headers.get('content-type') || '';
-  if (!contentType.includes('multipart/form-data')) {
+  if (!isMultipartRequest(request)) {
     return jsonError('Lähetä PDF multipart-lomakkeena', 400);
   }
 
-  const formData = await request.formData().catch(() => null);
-  if (!formData) {
-    return jsonError('Virheellinen lomakedata', 400);
-  }
+  const formData = await readRequestFormData(request);
 
   const file = formData.get('file');
   if (!(file instanceof File)) {
@@ -184,7 +179,7 @@ export const POST = withDb(async (request: NextRequest) => {
     buffer: bytes,
     accounts,
   });
-  const resolvedDate: ImportDateResolution = resolveImportedDocumentDate({
+  const resolvedDate: ImportedDocumentDateResolution = resolveImportedDocumentDate({
     importedDate: imported.date,
     periodStart: period.start_date,
     periodEnd: period.end_date,
@@ -273,7 +268,7 @@ export const POST = withDb(async (request: NextRequest) => {
     });
 
     const document = createInTransaction();
-    return NextResponse.json({
+    const response: DocumentImportApiSuccess = {
       id: document.id,
       number: document.number,
       category: imported.category,
@@ -281,7 +276,8 @@ export const POST = withDb(async (request: NextRequest) => {
       receiptPath,
       usedFallbackDate: resolvedDate.usedFallback,
       fallbackReason: resolvedDate.fallbackReason,
-    });
+    };
+    return NextResponse.json(response);
   } catch (error) {
     try {
       if (fs.existsSync(absoluteReceiptPath)) {

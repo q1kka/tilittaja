@@ -1,4 +1,5 @@
 import {
+  BankStatement,
   BankStatementEntry,
   BankStatementWithStats,
   BankStatementEntryWithAccount,
@@ -7,7 +8,7 @@ import { getDb } from './connection';
 import { createDocument, createEntry } from './documents';
 import { ensureAppTables } from './migrations';
 
-export interface DocumentBankStatementLinkSummary {
+interface DocumentBankStatementLinkSummary {
   document_id: number;
   bank_statement_id: number;
   bank_statement_period_start: number;
@@ -17,7 +18,7 @@ export interface DocumentBankStatementLinkSummary {
   linked_entry_count: number;
 }
 
-export interface UnlinkedBankStatementEntrySummary {
+interface UnlinkedBankStatementEntrySummary {
   id: number;
   bank_statement_id: number;
   entry_date: number;

@@ -2,7 +2,8 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import JSZip from 'jszip';
-import { getDb, getSettings, resolveDbPath } from '@/lib/db';
+import { resolveDbPath, getDb } from '@/lib/db/connection';
+import { getSettings } from '@/lib/db/settings';
 import { ApiRouteError } from '@/lib/api-helpers';
 import { getDataSourceRoot } from '@/lib/receipt-pdfs';
 
@@ -10,6 +11,16 @@ export const STATE_EXPORT_FORMAT = 'tilittaja-state-export';
 export const STATE_EXPORT_VERSION = 1;
 
 const SOURCE_PREFIX = 'source/';
+
+interface StateExportManifestCandidate {
+  format?: unknown;
+  version?: unknown;
+  createdAt?: unknown;
+  sourceSlug?: unknown;
+  sourceName?: unknown;
+  appVersion?: unknown;
+  fileCount?: unknown;
+}
 
 export interface StateExportManifest {
   format: typeof STATE_EXPORT_FORMAT;
@@ -91,7 +102,7 @@ function ensureExpectedManifest(value: unknown): StateExportManifest {
     throw new ApiRouteError('Vientipaketin manifesti puuttuu.', 400);
   }
 
-  const manifest = value as Partial<StateExportManifest>;
+  const manifest: StateExportManifestCandidate = value;
   if (
     manifest.format !== STATE_EXPORT_FORMAT ||
     manifest.version !== STATE_EXPORT_VERSION
@@ -99,6 +110,13 @@ function ensureExpectedManifest(value: unknown): StateExportManifest {
     throw new ApiRouteError('Vientipaketin formaatti ei ole tuettu.', 400);
   }
   if (!manifest.sourceSlug || !manifest.sourceName || !manifest.createdAt) {
+    throw new ApiRouteError('Vientipaketin tiedot ovat puutteelliset.', 400);
+  }
+  if (
+    typeof manifest.createdAt !== 'string' ||
+    typeof manifest.sourceSlug !== 'string' ||
+    typeof manifest.sourceName !== 'string'
+  ) {
     throw new ApiRouteError('Vientipaketin tiedot ovat puutteelliset.', 400);
   }
 
@@ -122,7 +140,7 @@ function safeRemove(targetPath: string | null): void {
   try {
     fs.rmSync(targetPath, { recursive: true, force: true });
   } catch {
-    // Best-effort cleanup for temp paths.
+    // Ignore temp cleanup failures.
   }
 }
 
@@ -168,12 +186,7 @@ export async function prepareStateExport(
   };
 }
 
-/**
- * Imports a state-export ZIP into a fresh data source directory.
- * Unlike `readImportedStateArchive`, this does not require an existing
- * data source — it reads the slug from the manifest and creates the
- * directory from scratch.
- */
+/** Imports a state-export ZIP into a new data source directory. */
 export async function importStateArchiveAsNewSource(
   archiveBuffer: Buffer,
 ): Promise<ImportedStateSummary & { slug: string }> {

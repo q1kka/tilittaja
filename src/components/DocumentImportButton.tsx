@@ -4,22 +4,17 @@ import { useState } from 'react';
 import { FileText, FolderOpen, Upload, X } from 'lucide-react';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import { useDocumentImport } from '@/components/DocumentImportProvider';
+import type { SelectedPdfImportFile } from '@/lib/import-types';
 
 interface Props {
   periodId: number;
   periodLocked: boolean;
 }
 
-interface SelectedImportFile {
-  key: string;
-  file: File;
-  label: string;
-}
-
 const folderInputProps = {
   directory: '',
   webkitdirectory: '',
-} as unknown as React.InputHTMLAttributes<HTMLInputElement>;
+} satisfies React.InputHTMLAttributes<HTMLInputElement>;
 
 function isPdfFile(file: File): boolean {
   return (
@@ -31,7 +26,7 @@ function getFileLabel(file: File): string {
   return file.webkitRelativePath || file.name;
 }
 
-function createSelectedImportFile(file: File): SelectedImportFile {
+function createSelectedImportFile(file: File): SelectedPdfImportFile {
   const label = getFileLabel(file);
   return {
     key: `${label}:${file.size}:${file.lastModified}`,
@@ -41,9 +36,9 @@ function createSelectedImportFile(file: File): SelectedImportFile {
 }
 
 function mergeSelectedFiles(
-  currentFiles: SelectedImportFile[],
+  currentFiles: SelectedPdfImportFile[],
   nextFiles: File[],
-): SelectedImportFile[] {
+): SelectedPdfImportFile[] {
   const merged = new Map(currentFiles.map((file) => [file.key, file]));
 
   nextFiles
@@ -64,7 +59,7 @@ function DocumentImportModal({
   onClose: () => void;
 }) {
   const { startImport } = useDocumentImport();
-  const [selectedFiles, setSelectedFiles] = useState<SelectedImportFile[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<SelectedPdfImportFile[]>([]);
   const [error, setError] = useState('');
   const { containerRef, handleKeyDown } = useModalA11y(onClose);
 

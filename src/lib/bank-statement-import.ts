@@ -1,8 +1,12 @@
 import { createRequire } from 'module';
 import path from 'path';
 import { z } from 'zod';
-import { ApiRouteError } from '@/lib/api-helpers';
+import { ApiRouteError, readJsonResponse } from '@/lib/api-helpers';
 import { getEnv } from '@/lib/env';
+import type {
+  PdfParseConstructor,
+  PdfParseResult,
+} from '@/lib/pdf-parse-types';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_BANK_STATEMENT_MODEL = 'gpt-5.4-mini';
@@ -33,7 +37,7 @@ const aiBankStatementSchema = z.object({
 
 type AiBankStatement = z.infer<typeof aiBankStatementSchema>;
 
-export interface ImportedBankStatementEntry {
+interface ImportedBankStatementEntry {
   entryDate: number;
   valueDate: number | null;
   archiveId: string;
@@ -46,7 +50,7 @@ export interface ImportedBankStatementEntry {
   amount: number;
 }
 
-export interface ImportedBankStatement {
+interface ImportedBankStatement {
   iban: string;
   periodStart: number;
   periodEnd: number;
@@ -54,16 +58,6 @@ export interface ImportedBankStatement {
   closingBalance: number;
   entries: ImportedBankStatementEntry[];
 }
-
-type PdfParseResult = { text?: string };
-interface PdfParseInstance {
-  getText(): Promise<PdfParseResult>;
-  destroy(): Promise<void>;
-}
-
-type PdfParseConstructor = new (options: {
-  data: Buffer | Uint8Array;
-}) => PdfParseInstance;
 
 const requireFromNode = createRequire(import.meta.url);
 
@@ -106,12 +100,10 @@ async function ensurePdfJsWorkerGlobal(workerPath: string): Promise<void> {
     return;
   }
 
-  const workerModule = (await import(
+  const workerModule: Partial<PdfJsWorkerState> = await import(
     /* webpackIgnore: true */
     workerPath
-  )) as {
-    WorkerMessageHandler?: unknown;
-  };
+  );
   globalThis.pdfjsWorker = {
     WorkerMessageHandler: workerModule.WorkerMessageHandler,
   };
@@ -454,7 +446,10 @@ async function requestBankStatementJson(
     }),
   });
 
-  const payload = await response.json().catch(() => null);
+  const payload = await readJsonResponse(
+    response,
+    'OpenAI API palautti virheellistä JSON-dataa',
+  );
   if (!response.ok) {
     const apiMessage =
       payload &&

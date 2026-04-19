@@ -1,7 +1,7 @@
 import { calculateBalances } from './accounting';
 import { Account, Entry } from './types';
 
-export interface VatReportDetail {
+interface VatReportDetail {
   accountId: number;
   accountNumber: string;
   accountName: string;

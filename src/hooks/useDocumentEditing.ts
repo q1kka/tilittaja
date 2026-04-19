@@ -88,7 +88,6 @@ export function useDocumentEditing({
     periodId,
   });
 
-  // ── Composed hooks ───────────────────────────────────────────────────
   const labels = useDocumentLabels(documentsState, categoryValues, nameValues);
 
   const accountPickerHook = useDocumentAccountPicker({
@@ -96,8 +95,6 @@ export function useDocumentEditing({
     documentsState,
     setDocumentsState,
   });
-
-  // ── Document save (date + metadata) ──────────────────────────────────
 
   const handleDocumentSave = async (doc: DocumentSummary) => {
     const rawDateValue = dateValues[doc.id] ?? '';
@@ -184,8 +181,6 @@ export function useDocumentEditing({
     }
   };
 
-  // ── Duplicate document ───────────────────────────────────────────────
-
   const handleDuplicateDocument = async (doc: DocumentSummary) => {
     setDuplicatingDocumentId(doc.id);
     setDuplicateErrors((prev) => ({ ...prev, [doc.id]: '' }));
@@ -238,8 +233,6 @@ export function useDocumentEditing({
     }
   };
 
-  // ── Delete document cleanup ──────────────────────────────────────────
-
   const handleDocumentDeleted = (documentId: number) => {
     const deletedDocument = documentsState.find((doc) => doc.id === documentId);
     const entryIds = new Set(
@@ -288,8 +281,6 @@ export function useDocumentEditing({
 
     accountPickerHook.cleanupForDeletedDocument(documentId, entryIds);
   };
-
-  // ── Amounts save ─────────────────────────────────────────────────────
 
   const handleAmountsSave = async (doc: DocumentSummary) => {
     const deletedEntryIds = deletedEntryIdsByDocument[doc.id] ?? [];
@@ -427,8 +418,6 @@ export function useDocumentEditing({
     }
   };
 
-  // ── Receipt change ───────────────────────────────────────────────────
-
   const handleReceiptChange = useCallback(
     (
       documentId: number,
@@ -450,8 +439,6 @@ export function useDocumentEditing({
     },
     [setDocumentsState],
   );
-
-  // ── Public API ───────────────────────────────────────────────────────
 
   return {
     documentsState,

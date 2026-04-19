@@ -114,7 +114,7 @@ function reportAmountForAccountType(
   accountType: AccountType,
   balance: number,
 ): number {
-  // In reports: revenue should stay positive, expense shown as negative.
+  // Reports show expenses as negative values.
   if (accountType === 4) return -balance;
   return balance;
 }
@@ -175,8 +175,7 @@ export function withImplicitCurrentPeriodProfit(
   const nextBalances = new Map(balanceSheetBalances);
   const existingProfitBalance = nextBalances.get(profitAccount.id) || 0;
 
-  // If the bookkeeping already has an explicit current-period profit balance,
-  // keep it as the source of truth instead of synthesizing a duplicate amount.
+  // Prefer an existing current-period profit balance over a synthetic one.
   if (Math.round(existingProfitBalance * 100) !== 0) {
     return { accounts: nextAccounts, balances: nextBalances };
   }
@@ -241,8 +240,7 @@ export function calculateReportAmounts(
 }
 
 export function isDetailReportRow(row: ReportRow): boolean {
-  // Older report structures used `D...` rows for account details, while the
-  // seeded default structures now use plain `SP...` rows for the same purpose.
+  // Support both legacy `D...` rows and current `SP...` detail rows.
   return (
     row.type === 'D' ||
     (row.type === 'S' && row.style === 'P' && row.accountRanges.length > 0)

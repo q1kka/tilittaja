@@ -7,7 +7,7 @@ import { buildAccountNames, type DocumentSummary } from '@/lib/documents-table';
 import type { AccountOption } from '@/lib/types';
 import { useAccountPicker } from '@/hooks/useAccountPicker';
 
-export interface UseDocumentAccountPickerParams {
+interface UseDocumentAccountPickerParams {
   accounts: AccountOption[];
   documentsState: DocumentSummary[];
   setDocumentsState: React.Dispatch<React.SetStateAction<DocumentSummary[]>>;

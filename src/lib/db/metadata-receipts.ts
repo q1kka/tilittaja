@@ -1,10 +1,5 @@
 import { DocumentMetadata } from '../types';
 import { getDb } from './connection';
-import { ensureAppTables } from './migrations';
-
-export function ensureDocumentMetadataTable(): void {
-  ensureAppTables(getDb());
-}
 
 export function getDocumentMetadata(
   documentId: number,
@@ -47,10 +42,6 @@ export function updateDocumentMetadata(
          name = excluded.name`,
     )
     .run(documentId, category.trim(), name.trim());
-}
-
-export function ensureDocumentReceiptLinksTable(): void {
-  ensureAppTables(getDb());
 }
 
 export function getDocumentReceiptLink(documentId: number): string | null {

@@ -53,12 +53,17 @@ interface ReceiptPayload {
   receiptSource: ReceiptSource;
 }
 
+interface ReceiptPayloadCandidate {
+  receiptPath?: unknown;
+  receiptSource?: unknown;
+}
+
 function isReceiptPayload(payload: unknown): payload is ReceiptPayload {
   if (typeof payload !== 'object' || payload === null) {
     return false;
   }
 
-  const candidate = payload as Record<string, unknown>;
+  const candidate: ReceiptPayloadCandidate = payload;
   const { receiptPath, receiptSource } = candidate;
   const hasValidPath = typeof receiptPath === 'string' || receiptPath === null;
   const hasValidSource =

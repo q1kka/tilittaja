@@ -10,23 +10,12 @@ import {
   Sparkles,
   Upload,
 } from 'lucide-react';
+import type { OpeningBalanceImportApiSuccess } from '@/lib/import-types';
 
 interface OpeningBalanceImportPanelProps {
   periodId: number;
   periodLabel: string;
   periodLocked: boolean;
-}
-
-interface OpeningBalanceImportResponse {
-  ok: true;
-  documentId: number;
-  documentNumber: number;
-  periodId: number;
-  createdAccounts: number;
-  createdEntries: number;
-  previousPeriodEnd: string;
-  importedAccounts: number;
-  savedFiles: string[];
 }
 
 function formatBytes(bytes: number): string {
@@ -52,7 +41,9 @@ export default function OpeningBalanceImportPanel({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<OpeningBalanceImportResponse | null>(null);
+  const [success, setSuccess] = useState<OpeningBalanceImportApiSuccess | null>(
+    null,
+  );
 
   const selectedSummary = useMemo(() => {
     if (selectedFiles.length === 0) return null;
@@ -90,14 +81,14 @@ export default function OpeningBalanceImportPanel({
         body: formData,
       });
       const payload = (await response.json().catch(() => null)) as
-        | ({ error?: string } & Partial<OpeningBalanceImportResponse>)
+        | ({ error?: string } & Partial<OpeningBalanceImportApiSuccess>)
         | null;
 
       if (!response.ok || !payload?.ok) {
         throw new Error(payload?.error || 'Tilikauden avauksen tuonti epäonnistui.');
       }
 
-      setSuccess(payload as OpeningBalanceImportResponse);
+      setSuccess(payload as OpeningBalanceImportApiSuccess);
       setSelectedFiles([]);
       router.refresh();
     } catch (importError) {

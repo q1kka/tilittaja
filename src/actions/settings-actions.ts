@@ -1,13 +1,12 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import {
   getPeriod,
   setPeriodLocked,
   updateCompanyInfo,
   updateSettingProperties,
 } from '@/lib/db';
-import { runDbAction } from '@/actions/_helpers';
+import { revalidateApp, runDbAction } from '@/actions/_helpers';
 import {
   companyInfoSchema,
   periodLockSchema,
@@ -23,17 +22,6 @@ import {
 } from '@/lib/tilinpaatos';
 import { requireUnlockedExistingPeriod } from '@/lib/period-locks';
 import { createRecurringRentDocuments } from '@/lib/recurring-rent';
-
-function revalidateApp(): void {
-  revalidatePath('/', 'layout');
-  revalidatePath('/documents');
-  revalidatePath('/accounts');
-  revalidatePath('/bank-statements');
-  revalidatePath('/settings');
-  revalidatePath('/settings/recurring-rent');
-  revalidatePath('/vat');
-  revalidatePath('/reports/tilinpaatos');
-}
 
 function normalizeMetadata(
   input: Partial<TilinpaatosMetadata>,
@@ -66,7 +54,7 @@ export async function updateCompanyInfoAction(input: unknown) {
 
   return runDbAction(() => {
     updateCompanyInfo(parsed.name, parsed.businessId);
-    revalidateApp();
+    revalidateApp(['/settings/recurring-rent']);
     return { ok: true };
   }, 'Yrityksen tietojen tallennus epäonnistui.');
 }
@@ -80,7 +68,7 @@ export async function updateTilinpaatosMetadataAction(
     const defaults = getTilinpaatosMetadataDefaults();
     const metadata = normalizeMetadata(parsed, defaults);
     updateSettingProperties(metadataToProperties(metadata));
-    revalidateApp();
+    revalidateApp(['/settings/recurring-rent']);
     return { ok: true, metadata };
   }, 'Tilinpäätösasetusten tallennus epäonnistui.');
 }
@@ -91,7 +79,7 @@ export async function setPeriodLockAction(periodId: number, locked: boolean) {
   return runDbAction(() => {
     requireResource(getPeriod(parsed.periodId), 'Tilikautta ei löytynyt');
     setPeriodLocked(parsed.periodId, parsed.locked);
-    revalidateApp();
+    revalidateApp(['/settings/recurring-rent']);
     return { ok: true, locked: parsed.locked };
   }, 'Tilikauden lukituksen tallennus epäonnistui.');
 }
@@ -102,7 +90,7 @@ export async function generateRecurringRentDocumentsAction(input: unknown) {
   return runDbAction(() => {
     requireUnlockedExistingPeriod(parsed.periodId);
     const result = createRecurringRentDocuments(parsed.periodId);
-    revalidateApp();
+    revalidateApp(['/settings/recurring-rent']);
     return result;
   }, 'Kuukausivuokrien tositteiden luonti epäonnistui.');
 }

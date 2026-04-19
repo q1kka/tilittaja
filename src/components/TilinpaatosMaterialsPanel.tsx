@@ -93,7 +93,6 @@ export default function TilinpaatosMaterialsPanel({
   return (
     <>
       <div className="space-y-5">
-        {/* Primary documents */}
         <div>
           <h3 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-2">
             Pääasiakirjat
@@ -128,7 +127,6 @@ export default function TilinpaatosMaterialsPanel({
           </div>
         </div>
 
-        {/* Attachments & receipts */}
         <div>
           <h3 className="text-xs font-medium uppercase tracking-wider text-text-muted mb-2">
             Aineistot
@@ -187,7 +185,6 @@ export default function TilinpaatosMaterialsPanel({
           </div>
         </div>
 
-        {/* Full archive */}
         <div>
           <a
             href={`/api/reports/full-archive/zip?period=${periodId}`}

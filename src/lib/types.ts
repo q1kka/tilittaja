@@ -65,14 +65,6 @@ export interface COAHeading {
   level: number;
 }
 
-export interface DocumentType {
-  id: number;
-  number: number;
-  name: string;
-  number_start: number;
-  number_end: number;
-}
-
 export interface Settings {
   version: number;
   name: string;

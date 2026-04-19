@@ -5,6 +5,7 @@ import {
   resolveDbPath,
   resolveRequestDataSource,
 } from '@/lib/db';
+import type { StateTransferImportSuccess } from '@/lib/import-types';
 import { readImportedStateArchive } from '@/lib/state-transfer';
 
 export const runtime = 'nodejs';
@@ -47,13 +48,14 @@ export async function POST(request: NextRequest) {
     const archiveBuffer = Buffer.from(await file.arrayBuffer());
     const imported = await readImportedStateArchive(archiveBuffer, source);
 
-    return NextResponse.json({
+    const response: StateTransferImportSuccess = {
       ok: true,
       source,
       fileCount: imported.fileCount,
       restoredAt: new Date().toISOString(),
       manifest: imported.manifest,
-    });
+    };
+    return NextResponse.json(response);
   } catch (error) {
     if (error instanceof ApiRouteError) {
       return jsonError(error.message, error.status);

@@ -192,7 +192,7 @@ The full schema is documented in [`src/lib/db/schema.sql`](src/lib/db/schema.sql
 ```
 src/
 ├── app/                        # Next.js App Router
-│   ├── layout.tsx              # Root layout, DB init, AppShell
+│   ├── layout.tsx              # Root layout, datasource loading, AppShell
 │   ├── page.tsx                # Redirects to /documents
 │   ├── documents/              # Voucher management
 │   ├── accounts/               # Chart of accounts

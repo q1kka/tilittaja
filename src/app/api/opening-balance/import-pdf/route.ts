@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { withDb, jsonError } from '@/lib/api-helpers';
+import {
+  isMultipartRequest,
+  isPdfFile,
+  jsonError,
+  readRequestFormData,
+  withDb,
+} from '@/lib/api-helpers';
+import type { OpeningBalanceImportApiSuccess } from '@/lib/import-types';
 import { applyImportedOpeningBalance } from '@/lib/opening-balance-import';
 
 export const runtime = 'nodejs';
@@ -12,22 +19,12 @@ const uploadSchema = z.object({
     .positive({ error: 'Valitse tilikausi' }),
 });
 
-function isPdfFile(file: File): boolean {
-  return (
-    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-  );
-}
-
 export const POST = withDb(async (request: NextRequest) => {
-  const contentType = request.headers.get('content-type') || '';
-  if (!contentType.includes('multipart/form-data')) {
+  if (!isMultipartRequest(request)) {
     return jsonError('Lähetä PDF:t multipart-lomakkeena', 400);
   }
 
-  const formData = await request.formData().catch(() => null);
-  if (!formData) {
-    return jsonError('Virheellinen lomakedata', 400);
-  }
+  const formData = await readRequestFormData(request);
 
   const files = formData
     .getAll('files')
@@ -59,8 +56,9 @@ export const POST = withDb(async (request: NextRequest) => {
     ),
   });
 
-  return NextResponse.json({
+  const response: OpeningBalanceImportApiSuccess = {
     ok: true,
     ...result,
-  });
+  };
+  return NextResponse.json(response);
 }, 'Tilikauden avauksen PDF-tuonti epäonnistui');

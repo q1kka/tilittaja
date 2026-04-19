@@ -63,6 +63,80 @@ export function requireResource<T>(
   return resource;
 }
 
+export function isMultipartRequest(request: Request): boolean {
+  return (request.headers.get('content-type') || '').includes(
+    'multipart/form-data',
+  );
+}
+
+export function isPdfFile(file: File): boolean {
+  return (
+    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+  );
+}
+
+export async function readRequestJson<T = unknown>(
+  request: Request,
+  invalidMessage = 'Virheellinen JSON-data',
+): Promise<T> {
+  try {
+    return (await request.json()) as T;
+  } catch {
+    throw new ApiRouteError(invalidMessage, 400);
+  }
+}
+
+export async function readOptionalRequestJson(
+  request: Request,
+): Promise<unknown | null> {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function readRequestFormData(
+  request: Request,
+  invalidMessage = 'Virheellinen lomakedata',
+): Promise<FormData> {
+  try {
+    return await request.formData();
+  } catch {
+    throw new ApiRouteError(invalidMessage, 400);
+  }
+}
+
+export async function readJsonResponse<T = unknown>(
+  response: Response,
+  invalidMessage: string,
+  status = 502,
+): Promise<T | null> {
+  try {
+    return (await response.json()) as T;
+  } catch {
+    if (!response.ok) {
+      return null;
+    }
+    throw new ApiRouteError(invalidMessage, status);
+  }
+}
+
+export function jsonActionRoute<TArgs extends unknown[], TResult>(
+  handler: (...args: TArgs) => Promise<TResult>,
+  fallbackMessage: string,
+  responseInit?: ResponseInit,
+): (...args: TArgs) => Promise<NextResponse> {
+  return async (...args: TArgs) => {
+    try {
+      const result = await handler(...args);
+      return NextResponse.json(result, responseInit);
+    } catch (error) {
+      return jsonActionError(error, fallbackMessage);
+    }
+  };
+}
+
 /**
  * Wraps an API route handler with request-scoped DB initialization and
  * centralized error handling. Resolves the datasource from the request

@@ -5,8 +5,8 @@ import {
   getEntriesForPeriod,
   getPeriods,
   getReportStructure,
-  getSettings,
-} from '@/lib/db';
+} from '@/lib/db/documents';
+import { getSettings } from '@/lib/db/settings';
 import {
   calculateBalances,
   calculateReportAmounts,
@@ -456,7 +456,7 @@ function drawStructuredStatement(
   for (const row of rows) {
     if (!row.visible) continue;
     if (row.type === '-') {
-      // Report structure contains many separator rows; skip visual dividers in PDF output.
+      // Skip separator rows in PDF output.
       continue;
     }
 

@@ -2,7 +2,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { revalidatePath } from 'next/cache';
 import {
   clearDocumentReceiptLink,
   createDocument,
@@ -29,7 +28,7 @@ import {
   getAccount,
   getEntry,
 } from '@/lib/db';
-import { runDbAction } from '@/actions/_helpers';
+import { revalidateApp, runDbAction } from '@/actions/_helpers';
 import {
   documentCreateSchema,
   documentBulkDeleteSchema,
@@ -39,7 +38,7 @@ import {
   entryAccountSchema,
   receiptLinkSchema,
 } from '@/lib/validation';
-import { ApiRouteError, requireResource } from '@/lib/api-helpers';
+import { ApiRouteError, isPdfFile, requireResource } from '@/lib/api-helpers';
 import {
   requireUnlockedDocumentPeriod,
   requireUnlockedEntryPeriod,
@@ -59,16 +58,6 @@ import {
   resolvePdfRelativePath,
 } from '@/lib/receipt-pdfs';
 
-function revalidateApp(): void {
-  revalidatePath('/', 'layout');
-  revalidatePath('/documents');
-  revalidatePath('/accounts');
-  revalidatePath('/bank-statements');
-  revalidatePath('/settings');
-  revalidatePath('/vat');
-  revalidatePath('/reports/tilinpaatos');
-}
-
 function getExpectedPeriodFolder(startDate: number, endDate: number): string {
   const startYear = new Date(startDate).getFullYear();
   const endYear = new Date(endDate).getFullYear();
@@ -82,12 +71,6 @@ function buildUploadedReceiptPath(
 ): string {
   const folder = getExpectedPeriodFolder(periodStartDate, periodEndDate);
   return path.join('tositteet', folder, `${documentCode}.pdf`);
-}
-
-function isPdfFile(file: File): boolean {
-  return (
-    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-  );
 }
 
 function resolveReceiptResponse(

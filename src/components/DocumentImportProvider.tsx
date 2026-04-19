@@ -14,20 +14,11 @@ import {
   Loader2,
   X,
 } from 'lucide-react';
+import type { DocumentImportApiSuccess } from '@/lib/import-types';
 
 interface StartImportParams {
   periodId: number;
   files: File[];
-}
-
-interface ImportResult {
-  id: number;
-  number: number;
-  category: string;
-  name: string;
-  receiptPath: string;
-  usedFallbackDate?: boolean;
-  fallbackReason?: 'missing' | 'outside_period' | 'shifted_year' | null;
 }
 
 interface ImportTaskItem {
@@ -68,7 +59,7 @@ function getTaskCounts(task: ImportTask) {
 }
 
 function getDateWarning(
-  reason: ImportResult['fallbackReason'],
+  reason: DocumentImportApiSuccess['fallbackReason'] | undefined,
 ): string | undefined {
   if (reason === 'missing') {
     return 'Päiväystä ei tunnistettu luotettavasti, joten käytettiin valitun kauden alkupäivää.';
@@ -235,7 +226,7 @@ export default function DocumentImportProvider({
               body: formData,
             });
             const payload = (await response.json().catch(() => null)) as
-              | ({ error?: string } & Partial<ImportResult>)
+              | ({ error?: string } & Partial<DocumentImportApiSuccess>)
               | null;
 
             if (!response.ok || !payload?.id) {
@@ -252,7 +243,7 @@ export default function DocumentImportProvider({
                 category: payload.category,
                 name: payload.name,
                 dateWarning: payload.usedFallbackDate
-                  ? getDateWarning(payload.fallbackReason)
+                  ? getDateWarning(payload.fallbackReason ?? null)
                   : undefined,
               };
               return {

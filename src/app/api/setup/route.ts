@@ -3,19 +3,9 @@ import { createNewDatabase, linkExternalDatabase } from '@/lib/db/bootstrap';
 import { importStateArchiveAsNewSource } from '@/lib/state-transfer';
 import { ApiRouteError } from '@/lib/api-helpers';
 import { getEnv } from '@/lib/env';
+import { slugifyDataSourceName } from '@/lib/datasource-slug';
 
 export const runtime = 'nodejs';
-
-function slugify(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[äå]/g, 'a')
-      .replace(/ö/g, 'o')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'kirjanpito'
-  );
-}
 
 function makeResponse(slug: string) {
   const env = getEnv();
@@ -83,7 +73,7 @@ export async function POST(request: NextRequest) {
       const startDate = new Date(year, 0, 1).getTime();
       const endDate = new Date(year, 11, 31).getTime();
 
-      slug = slugify(companyName);
+      slug = slugifyDataSourceName(companyName);
       createNewDatabase(slug, {
         companyName: companyName.trim(),
         businessId: businessId?.trim(),
@@ -100,7 +90,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      slug = slugify(name || 'ulkoinen');
+      slug = slugifyDataSourceName(name || 'ulkoinen');
       linkExternalDatabase(filePath.trim(), slug);
     } else {
       return NextResponse.json({ error: 'Tuntematon tila' }, { status: 400 });

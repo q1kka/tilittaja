@@ -4,7 +4,7 @@ import {
   type TilinpaatosRow,
 } from '@/lib/tilinpaatos';
 
-export function StatementTable({
+function StatementTable({
   rows,
   comparisonLabel,
 }: {

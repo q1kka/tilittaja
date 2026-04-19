@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  withDb,
-  requireRouteId,
-  jsonError,
   jsonActionError,
+  isMultipartRequest,
+  isPdfFile,
+  jsonError,
+  readOptionalRequestJson,
+  readRequestFormData,
+  requireRouteId,
+  withDb,
 } from '@/lib/api-helpers';
 import type { RouteIdParams } from '@/lib/types';
 import {
@@ -18,7 +22,9 @@ export const PATCH = withDb(
   async (request: NextRequest, { params }: RouteIdParams) => {
     try {
       const documentId = await requireRouteId(params, 'tositteen tunniste');
-      const body = await request.json().catch(() => null);
+      const body = (await readOptionalRequestJson(request)) as {
+        receiptPath?: string | null;
+      } | null;
       const result = await updateDocumentReceiptAction(documentId, {
         receiptPath: body?.receiptPath,
       });
@@ -34,19 +40,18 @@ export const POST = withDb(
   async (request: NextRequest, { params }: RouteIdParams) => {
     try {
       const documentId = await requireRouteId(params, 'tositteen tunniste');
-      const contentType = request.headers.get('content-type') || '';
-      if (!contentType.includes('multipart/form-data')) {
+      if (!isMultipartRequest(request)) {
         return jsonError('Lähetä PDF multipart-lomakkeena', 400);
       }
 
-      const formData = await request.formData().catch(() => null);
-      if (!formData) {
-        return jsonError('Virheellinen lomakedata', 400);
-      }
+      const formData = await readRequestFormData(request);
 
       const file = formData.get('file');
       if (!(file instanceof File)) {
         return jsonError('Lähetä yksi PDF-tiedosto kentässä `file`', 400);
+      }
+      if (!isPdfFile(file)) {
+        return jsonError('Vain PDF-tiedostot ovat sallittuja', 400);
       }
 
       const result = await uploadDocumentReceiptAction(documentId, file);

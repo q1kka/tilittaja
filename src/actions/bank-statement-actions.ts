@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import {
   createBankStatement,
   createBankStatementEntry,
@@ -18,7 +17,7 @@ import {
   getSettings,
   updateBankStatementEntry,
 } from '@/lib/db';
-import { runDbAction } from '@/actions/_helpers';
+import { revalidateApp, runDbAction } from '@/actions/_helpers';
 import {
   bankStatementAiApplySchema,
   bankStatementAiSuggestSchema,
@@ -61,16 +60,6 @@ function buildLinkHistoryDedupKey(link: {
     normalizeHistoryText(link.documentName),
     link.documentDescriptions.map((description) => normalizeHistoryText(description)).join('|'),
   ].join('::');
-}
-
-function revalidateApp(): void {
-  revalidatePath('/', 'layout');
-  revalidatePath('/documents');
-  revalidatePath('/accounts');
-  revalidatePath('/bank-statements');
-  revalidatePath('/settings');
-  revalidatePath('/vat');
-  revalidatePath('/reports/tilinpaatos');
 }
 
 export async function updateBankStatementEntryDocumentAction(

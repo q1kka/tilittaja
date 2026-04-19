@@ -9,11 +9,19 @@ import {
   getAccount,
   requireCurrentDataSource,
 } from '@/lib/db';
-import { withDb, requireResource, jsonError } from '@/lib/api-helpers';
+import {
+  isMultipartRequest,
+  isPdfFile,
+  jsonError,
+  readRequestFormData,
+  requireResource,
+  withDb,
+} from '@/lib/api-helpers';
 import {
   extractImportedBankStatementFromPdf,
   sanitizeImportedBankStatementPdfName,
 } from '@/lib/bank-statement-import';
+import type { BankStatementImportApiSuccess } from '@/lib/import-types';
 import { getPdfRoot } from '@/lib/receipt-pdfs';
 
 export const runtime = 'nodejs';
@@ -24,12 +32,6 @@ const uploadSchema = z.object({
     .int({ error: 'Valitse pankkitili' })
     .positive({ error: 'Valitse pankkitili' }),
 });
-
-function isPdfFile(file: File): boolean {
-  return (
-    file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-  );
-}
 
 function getStatementPeriodFolder(
   periodStart: number,
@@ -51,15 +53,11 @@ function buildStatementRelativePath(
 }
 
 export const POST = withDb(async (request: NextRequest) => {
-  const contentType = request.headers.get('content-type') || '';
-  if (!contentType.includes('multipart/form-data')) {
+  if (!isMultipartRequest(request)) {
     return jsonError('Lähetä PDF multipart-lomakkeena', 400);
   }
 
-  const formData = await request.formData().catch(() => null);
-  if (!formData) {
-    return jsonError('Virheellinen lomakedata', 400);
-  }
+  const formData = await readRequestFormData(request);
 
   const file = formData.get('file');
   if (!(file instanceof File)) {
@@ -137,11 +135,12 @@ export const POST = withDb(async (request: NextRequest) => {
       created++;
     }
 
-    return NextResponse.json({
+    const response: BankStatementImportApiSuccess = {
       id: statement.id,
       created,
       skipped,
-    });
+    };
+    return NextResponse.json(response);
   } catch (error) {
     try {
       if (fs.existsSync(absolutePath)) {

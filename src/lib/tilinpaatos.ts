@@ -2,16 +2,19 @@ import {
   getAccounts,
   getDocumentBalances,
   getDocuments,
-  getDocumentMetadataMap,
-  getDocumentReceiptLinks,
   getEntriesForPeriod,
   getPeriods,
   getReportStructure,
-  getSettingProperties,
-  getSettings,
-  getUnlinkedBankStatementEntriesForPeriod,
+} from '@/lib/db/documents';
+import { getSettingProperties, getSettings } from '@/lib/db/settings';
+import {
   getBankStatements,
-} from '@/lib/db';
+  getUnlinkedBankStatementEntriesForPeriod,
+} from '@/lib/db/bank-statements';
+import {
+  getDocumentMetadataMap,
+  getDocumentReceiptLinks,
+} from '@/lib/db/metadata-receipts';
 import {
   resolveDocumentReceiptsForSource,
   buildEntryDescriptionsByDocumentId,
@@ -569,7 +572,7 @@ export interface StatementSummary {
   text: string;
 }
 
-export function getLatestRowAmount(
+function getLatestRowAmount(
   rows: TilinpaatosRow[],
   matcher: RegExp,
 ): number | null {
@@ -622,7 +625,7 @@ export function signatureDateAsFi(metadata: TilinpaatosMetadata): string {
   return fromIsoToFiDate(metadata.signatureDate);
 }
 
-export interface ReadinessItem {
+interface ReadinessItem {
   label: string;
   ok: boolean;
   count?: number;

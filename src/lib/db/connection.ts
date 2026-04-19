@@ -143,11 +143,7 @@ export function getDataSources(): DataSource[] {
   }
 }
 
-/**
- * Resolves the database path for the current request by reading the
- * `datasource` cookie. Used by `withDb()` and `runWithResolvedDb()`
- * to set up request-scoped AsyncLocalStorage context.
- */
+/** Resolves the current request's database path from cookies or fallbacks. */
 export async function resolveRequestDbPath(): Promise<string> {
   const env = getEnv();
   const defaultSource = getDefaultSourceSlug();
@@ -160,7 +156,7 @@ export async function resolveRequestDbPath(): Promise<string> {
       if (dbPath) return dbPath;
     }
   } catch {
-    /* cookie access failed — outside request context */
+    /* outside request context */
   }
 
   if (defaultSource) {
@@ -173,36 +169,15 @@ export async function resolveRequestDbPath(): Promise<string> {
   throw new Error('Tietokantaa ei voitu avata.');
 }
 
-/**
- * Runs `fn` with a request-scoped database path stored in
- * AsyncLocalStorage, so that all `getDb()` calls within `fn`
- * (including nested async calls) resolve to the correct database.
- */
+/** Runs `fn` with a request-scoped database path. */
 export function runWithRequestDb<T>(dbPath: string, fn: () => T): T {
   return requestDbPathStore.run(dbPath, fn);
 }
 
-/**
- * Runs `fn` inside a request-scoped DB context for Server Components.
- * Unlike the old `initDb()`, this uses `run()` instead of `enterWith()`
- * so the context is deterministic and cannot leak.
- */
+/** Resolves the current DB path and runs `fn` inside that request scope. */
 export async function runWithResolvedDb<T>(fn: () => T): Promise<T> {
   const dbPath = await resolveRequestDbPath();
   return runWithRequestDb(dbPath, fn);
-}
-
-/**
- * Deprecated compatibility helper. It intentionally does not persist
- * request context beyond the awaited call, which avoids the old
- * cross-request leakage problem.
- */
-export async function initDb(): Promise<void> {
-  try {
-    await resolveRequestDbPath();
-  } catch {
-    /* legacy callers expect initDb to be non-throwing */
-  }
 }
 
 export function closeDbConnection(dbPath: string): void {
