@@ -1,4 +1,8 @@
-import { formatCurrency, getDetailRows } from '@/lib/accounting';
+import {
+  formatCurrency,
+  getDetailRows,
+  isDetailReportRow,
+} from '@/lib/accounting';
 import type { Account, ReportRow } from '@/lib/types';
 
 interface ReportStructureTableProps {
@@ -33,7 +37,7 @@ export function ReportStructureTable({
             const isTotal = row.type === 'S' || row.type === 'T';
             const isHeader = row.type === 'H' || row.type === 'G';
 
-            if (row.type === 'D') {
+            if (isDetailReportRow(row)) {
               const details = getDetailRows(row, accounts, balances);
               return details.map((detail, j) => (
                 <tr

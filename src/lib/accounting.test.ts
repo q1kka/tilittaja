@@ -10,11 +10,13 @@ import {
   getDetailRows,
   getDetailRowsWithIds,
   getEntrySign,
+  isDetailReportRow,
   parseReportStructure,
   periodFilenamePart,
   periodLabel,
   periodToDateString,
   sanitizeForFilename,
+  withImplicitCurrentPeriodProfit,
 } from '@/lib/accounting';
 import { account, entry } from '@/lib/test-helpers';
 
@@ -169,6 +171,44 @@ describe('calculateReportAmounts', () => {
     const calculated = calculateReportAmounts(rows, [], new Map());
     expect(calculated[0].visible).toBe(true);
   });
+
+  it('adds implicit current-period result to balance sheet equity', () => {
+    const accounts = [
+      account({ id: 1, number: '1910', name: 'Pankkisaamiset', type: 0 }),
+      account({ id: 2, number: '2600', name: 'Pääomalainat', type: 1 }),
+      account({ id: 3, number: '3750', name: 'Vuokratuotot', type: 3 }),
+      account({ id: 4, number: '8460', name: 'Pankinkulut', type: 4 }),
+    ];
+    const balanceSheetBalances = new Map<number, number>([
+      [1, 1000],
+      [2, 1200],
+    ]);
+    const incomeStatementBalances = new Map<number, number>([
+      [3, 200],
+      [4, 400],
+    ]);
+    const rows = parseReportStructure(
+      'SP0;1000;2000;Vastaavaa yhteensä\nSP0;2370;2400;Tilikauden voitto (tappio)\nSP0;2000;3000;Vastattavaa yhteensä',
+    );
+
+    const adjusted = withImplicitCurrentPeriodProfit(
+      balanceSheetBalances,
+      incomeStatementBalances,
+      accounts,
+    );
+    const calculated = calculateReportAmounts(
+      rows,
+      adjusted.accounts,
+      adjusted.balances,
+    );
+
+    expect(calculated[0].amount).toBe(1000);
+    expect(calculated[1].amount).toBe(-200);
+    expect(calculated[2].amount).toBe(1000);
+    expect(
+      adjusted.accounts.find((entry) => entry.number === '2370')?.type,
+    ).toBe(6);
+  });
 });
 
 describe('getDetailRowsWithIds', () => {
@@ -191,6 +231,23 @@ describe('getDetailRowsWithIds', () => {
     const balances = new Map([[1, 0]]);
     const row = parseReportStructure('DP0;1000;2000;Details')[0];
     expect(getDetailRowsWithIds(row, accounts, balances)).toHaveLength(0);
+  });
+});
+
+describe('isDetailReportRow', () => {
+  it('treats legacy D rows as detail rows', () => {
+    const row = parseReportStructure('DP0;1000;2000;Details')[0];
+    expect(isDetailReportRow(row)).toBe(true);
+  });
+
+  it('treats plain S rows with account ranges as detail rows', () => {
+    const row = parseReportStructure('SP0;1000;2000;Kassa')[0];
+    expect(isDetailReportRow(row)).toBe(true);
+  });
+
+  it('keeps bold total rows as summary rows', () => {
+    const row = parseReportStructure('SB0;1000;2000;Yhteensä')[0];
+    expect(isDetailReportRow(row)).toBe(false);
   });
 });
 

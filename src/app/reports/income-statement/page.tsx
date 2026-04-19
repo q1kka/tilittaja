@@ -13,6 +13,7 @@ import {
   calculateReportAmounts,
   filterVisibleReportRows,
   getDetailRowsWithIds,
+  isDetailReportRow,
   periodLabel,
 } from '@/lib/accounting';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
@@ -63,7 +64,7 @@ export default async function IncomeStatementPage({
   > = {};
 
   visibleRows.forEach((row, i) => {
-    if (row.type === 'D') {
+    if (isDetailReportRow(row)) {
       detailRowsByIndex[i] = getDetailRowsWithIds(row, accounts, balances);
     }
   });

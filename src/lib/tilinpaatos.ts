@@ -23,6 +23,7 @@ import {
   parseReportStructure,
   periodLabel,
   periodToDateString,
+  withImplicitCurrentPeriodProfit,
 } from '@/lib/accounting';
 import { Account, AccountType, Period, ReportRow } from '@/lib/types';
 import { resolveDocumentLabels } from '@/lib/document-labels';
@@ -376,11 +377,31 @@ export function buildTilinpaatosPackage(periodId?: number): TilinpaatosPackage {
     ? calculateBalances(getEntriesForPeriod(comparisonPeriod.id), accounts)
     : undefined;
 
+  const currentBalanceSheetData = withImplicitCurrentPeriodProfit(
+    currentBalanceSheetBalances,
+    currentIncomeBalances,
+    accounts,
+  );
+  const previousBalanceSheetData =
+    previousBalanceSheetBalances && previousIncomeBalances
+      ? withImplicitCurrentPeriodProfit(
+          previousBalanceSheetBalances,
+          previousIncomeBalances,
+          accounts,
+        )
+      : undefined;
+  const balanceSheetAccounts =
+    previousBalanceSheetData?.accounts.length &&
+    previousBalanceSheetData.accounts.length >
+      currentBalanceSheetData.accounts.length
+      ? previousBalanceSheetData.accounts
+      : currentBalanceSheetData.accounts;
+
   const balanceSheetRows = calculateStatementRows(
     'balance-sheet',
-    accounts,
-    currentBalanceSheetBalances,
-    previousBalanceSheetBalances,
+    balanceSheetAccounts,
+    currentBalanceSheetData.balances,
+    previousBalanceSheetData?.balances,
   );
   const incomeStatementRows = calculateStatementRows(
     'income-statement',

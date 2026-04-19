@@ -14,6 +14,7 @@ import {
   formatNumber,
   getDetailRows,
   getEntrySign,
+  isDetailReportRow,
   parseReportStructure,
   periodFilenamePart,
   periodLabel,
@@ -459,7 +460,7 @@ function drawStructuredStatement(
       continue;
     }
 
-    if (row.type === 'D') {
+    if (isDetailReportRow(row)) {
       const details = getDetailRows(row, accounts, balances);
       if (!details.length) continue;
       ensureFits(doc, 12, () =>

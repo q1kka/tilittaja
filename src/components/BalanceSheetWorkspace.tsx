@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, type KeyboardEvent } from 'react';
-import { formatCurrency, formatDate, getEntrySign } from '@/lib/accounting';
+import {
+  formatCurrency,
+  formatDate,
+  getEntrySign,
+  isDetailReportRow,
+} from '@/lib/accounting';
 import type { AccountType, ReportRow } from '@/lib/types';
 
 export interface BalanceSheetAccount {
@@ -103,7 +108,7 @@ export default function BalanceSheetWorkspace({
               const isTotal = row.type === 'S' || row.type === 'T';
               const isHeader = row.type === 'H' || row.type === 'G';
 
-              if (row.type === 'D') {
+              if (isDetailReportRow(row)) {
                 const details = detailRowsByIndex[i] ?? [];
                 return details.map((detail, j) => {
                   const isSelected = detail.accountId === selectedAccountId;

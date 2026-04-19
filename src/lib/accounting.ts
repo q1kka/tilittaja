@@ -119,6 +119,80 @@ function reportAmountForAccountType(
   return balance;
 }
 
+function findCurrentPeriodProfitAccount(accounts: Account[]): Account | null {
+  return (
+    accounts.find((account) => account.type === 6 || account.number === '2370') ||
+    null
+  );
+}
+
+function createSyntheticCurrentPeriodProfitAccount(accounts: Account[]): Account {
+  const syntheticId =
+    accounts.reduce((lowestId, account) => Math.min(lowestId, account.id), 0) - 1;
+  return {
+    id: syntheticId,
+    number: '2370',
+    name: 'Tilikauden voitto (tappio)',
+    type: 6,
+    vat_code: 0,
+    vat_percentage: 0,
+    vat_account1_id: null,
+    vat_account2_id: null,
+    flags: 0,
+  };
+}
+
+function calculateCurrentPeriodProfit(
+  balances: Map<number, number>,
+  accounts: Account[],
+): number {
+  const accountMap = new Map<number, Account>();
+  accounts.forEach((account) => accountMap.set(account.id, account));
+
+  let currentPeriodProfit = 0;
+  for (const [accountId, balance] of balances) {
+    const account = accountMap.get(accountId);
+    if (!account) continue;
+    if (account.type !== 3 && account.type !== 4) continue;
+    currentPeriodProfit += reportAmountForAccountType(account.type, balance);
+  }
+
+  return currentPeriodProfit;
+}
+
+export function withImplicitCurrentPeriodProfit(
+  balanceSheetBalances: Map<number, number>,
+  incomeStatementBalances: Map<number, number>,
+  accounts: Account[],
+): { accounts: Account[]; balances: Map<number, number> } {
+  const profitAccount =
+    findCurrentPeriodProfitAccount(accounts) ||
+    createSyntheticCurrentPeriodProfitAccount(accounts);
+  const nextAccounts =
+    findCurrentPeriodProfitAccount(accounts) != null
+      ? accounts
+      : [...accounts, profitAccount];
+  const nextBalances = new Map(balanceSheetBalances);
+  const existingProfitBalance = nextBalances.get(profitAccount.id) || 0;
+
+  // If the bookkeeping already has an explicit current-period profit balance,
+  // keep it as the source of truth instead of synthesizing a duplicate amount.
+  if (Math.round(existingProfitBalance * 100) !== 0) {
+    return { accounts: nextAccounts, balances: nextBalances };
+  }
+
+  const currentPeriodProfit = calculateCurrentPeriodProfit(
+    incomeStatementBalances,
+    accounts,
+  );
+  if (Math.round(currentPeriodProfit * 100) === 0) {
+    return { accounts: nextAccounts, balances: nextBalances };
+  }
+
+  nextBalances.set(profitAccount.id, currentPeriodProfit);
+  return { accounts: nextAccounts, balances: nextBalances };
+}
+
 export function calculateReportAmounts(
   rows: ReportRow[],
   accounts: Account[],
@@ -164,6 +238,15 @@ export function calculateReportAmounts(
 
     return { ...row, visible: true };
   });
+}
+
+export function isDetailReportRow(row: ReportRow): boolean {
+  // Older report structures used `D...` rows for account details, while the
+  // seeded default structures now use plain `SP...` rows for the same purpose.
+  return (
+    row.type === 'D' ||
+    (row.type === 'S' && row.style === 'P' && row.accountRanges.length > 0)
+  );
 }
 
 export function getDetailRows(

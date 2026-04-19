@@ -13,7 +13,9 @@ import {
   calculateReportAmounts,
   filterVisibleReportRows,
   getDetailRowsWithIds,
+  isDetailReportRow,
   periodLabel,
+  withImplicitCurrentPeriodProfit,
 } from '@/lib/accounting';
 import { type PageSearchParams, resolvePeriodId } from '@/lib/page-params';
 import BalanceSheetWorkspace from '@/components/BalanceSheetWorkspace';
@@ -58,8 +60,18 @@ export default async function BalanceSheetPage({
   }
 
   const balances = calculateBalances(allEntries, accounts);
+  const currentIncomeBalances = calculateBalances(currentPeriodEntries, accounts);
+  const balanceSheetData = withImplicitCurrentPeriodProfit(
+    balances,
+    currentIncomeBalances,
+    accounts,
+  );
   const reportRows = parseReportStructure(structure.data);
-  const calculatedRows = calculateReportAmounts(reportRows, accounts, balances);
+  const calculatedRows = calculateReportAmounts(
+    reportRows,
+    balanceSheetData.accounts,
+    balanceSheetData.balances,
+  );
   const visibleRows = filterVisibleReportRows(calculatedRows);
 
   const detailRowsByIndex: Record<
@@ -72,8 +84,12 @@ export default async function BalanceSheetPage({
     }[]
   > = {};
   visibleRows.forEach((row, i) => {
-    if (row.type === 'D') {
-      detailRowsByIndex[i] = getDetailRowsWithIds(row, accounts, balances);
+    if (isDetailReportRow(row)) {
+      detailRowsByIndex[i] = getDetailRowsWithIds(
+        row,
+        balanceSheetData.accounts,
+        balanceSheetData.balances,
+      );
     }
   });
 
@@ -95,7 +111,7 @@ export default async function BalanceSheetPage({
   }
 
   const accountTypes: Record<number, AccountType> = {};
-  for (const account of accounts) {
+  for (const account of balanceSheetData.accounts) {
     accountTypes[account.id] = account.type;
   }
 
