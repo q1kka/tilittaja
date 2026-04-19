@@ -1,6 +1,5 @@
 'use server';
 
-import fs from 'fs';
 import { revalidatePath } from 'next/cache';
 import {
   createBankStatement,
@@ -10,27 +9,59 @@ import {
   getAccount,
   getBankStatement,
   getBankStatementEntries,
+  getBankStatements,
   getDocument,
+  getDocumentMetadataMap,
+  getDocuments,
+  getEntriesForPeriod,
+  getPeriod,
   getSettings,
-  mergeBankStatements,
-  requireCurrentDataSource,
   updateBankStatementEntry,
 } from '@/lib/db';
 import { runDbAction } from '@/actions/_helpers';
 import {
+  bankStatementAiApplySchema,
+  bankStatementAiSuggestSchema,
   bankStatementCreateDocumentsSchema,
   bankStatementEntryLinkSchema,
   bankStatementManualCreateSchema,
-  bankStatementMergeSchema,
 } from '@/lib/validation';
 import { ApiRouteError, requireResource } from '@/lib/api-helpers';
+import { suggestBankStatementDocumentLinks } from '@/lib/bank-statement-document-linking';
 import {
   requireUnlockedBankStatementEntryPeriod,
   requireUnlockedBankStatementPeriod,
   requireUnlockedDocumentPeriodById,
   requireUnlockedExistingPeriod,
 } from '@/lib/period-locks';
-import { resolveBankStatementPdfAbsolutePath } from '@/lib/receipt-pdfs';
+
+function normalizeHistoryText(value: string | null): string {
+  return (value ?? '')
+    .normalize('NFKD')
+    .replace(/[^\x00-\x7F]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function buildLinkHistoryDedupKey(link: {
+  amount: number;
+  counterparty: string;
+  reference: string | null;
+  message: string | null;
+  documentCategory: string;
+  documentName: string;
+  documentDescriptions: string[];
+}): string {
+  return [
+    link.amount.toFixed(2),
+    normalizeHistoryText(link.counterparty),
+    normalizeHistoryText(link.reference),
+    normalizeHistoryText(link.message),
+    normalizeHistoryText(link.documentCategory),
+    normalizeHistoryText(link.documentName),
+    link.documentDescriptions.map((description) => normalizeHistoryText(description)).join('|'),
+  ].join('::');
+}
 
 function revalidateApp(): void {
   revalidatePath('/', 'layout');
@@ -99,48 +130,187 @@ export async function createBankStatementDocumentsAction(input: unknown) {
   }, 'Tositteiden luonti epäonnistui.');
 }
 
-export async function mergeBankStatementsAction(input: unknown) {
-  const parsed = bankStatementMergeSchema.parse(input);
+export async function suggestBankStatementDocumentLinksAction(input: unknown) {
+  const parsed = bankStatementAiSuggestSchema.parse(input);
 
   return runDbAction(async () => {
-    requireUnlockedBankStatementPeriod(parsed.masterStatementId);
-    for (const statementId of parsed.mergedStatementIds) {
-      requireUnlockedBankStatementPeriod(statementId);
+    const statement = requireResource(
+      getBankStatement(parsed.statementId),
+      'Tiliotetta ei löydy',
+    );
+    const settings = getSettings();
+    const statementEntries = getBankStatementEntries(parsed.statementId).filter(
+      (entry) => entry.document_id == null,
+    );
+    const requestedEntryIds = new Set(parsed.entryIds);
+    const targetEntries =
+      requestedEntryIds.size > 0
+        ? statementEntries.filter((entry) => requestedEntryIds.has(entry.id))
+        : statementEntries;
+
+    if (targetEntries.length === 0) {
+      return { suggestions: [] };
     }
 
-    const { masterStatement, mergedStatements } = mergeBankStatements(parsed);
-    const source = await requireCurrentDataSource();
-    const warnings: string[] = [];
-    const sourcePaths = new Set<string>();
+    const documents = getDocuments(settings.current_period_id);
+    const documentEntries = getEntriesForPeriod(settings.current_period_id);
+    const metadataByDocumentId = getDocumentMetadataMap(
+      documents.map((document) => document.id),
+    );
 
-    for (const statement of mergedStatements) {
-      if (!statement.source_file) continue;
-      const resolvedPath = resolveBankStatementPdfAbsolutePath(
-        source,
-        statement.source_file,
-      );
-      if (!resolvedPath) continue;
-      sourcePaths.add(resolvedPath);
-    }
+    const entriesByDocumentId = new Map<
+      number,
+      Array<{ amount: number; debit: boolean; description: string }>
+    >();
+    documentEntries.forEach((entry) => {
+      const current = entriesByDocumentId.get(entry.document_id) ?? [];
+      current.push({
+        amount: entry.amount,
+        debit: entry.debit,
+        description: entry.description,
+      });
+      entriesByDocumentId.set(entry.document_id, current);
+    });
 
-    for (const absolutePath of sourcePaths) {
-      try {
-        if (fs.existsSync(absolutePath)) {
-          fs.unlinkSync(absolutePath);
+    const documentSummaries = documents.map((document) => {
+      const metadata = metadataByDocumentId.get(document.id);
+      const linkedEntries = entriesByDocumentId.get(document.id) ?? [];
+      const descriptions = [...new Set(linkedEntries.map((entry) => entry.description.trim()))]
+        .filter(Boolean)
+        .slice(0, 3);
+
+      return {
+        id: document.id,
+        number: document.number,
+        date: document.date,
+        category: metadata?.category ?? '',
+        name: metadata?.name ?? '',
+        totalDebit: linkedEntries
+          .filter((entry) => entry.debit)
+          .reduce((sum, entry) => sum + entry.amount, 0),
+        totalCredit: linkedEntries
+          .filter((entry) => !entry.debit)
+          .reduce((sum, entry) => sum + entry.amount, 0),
+        descriptions,
+      };
+    });
+    const documentSummaryById = new Map(
+      documentSummaries.map((document) => [document.id, document]),
+    );
+    const currentPeriod = requireResource(
+      getPeriod(settings.current_period_id),
+      'Tilikautta ei löydy',
+    );
+    const previousLinkExamples = getBankStatements({
+      periodStart: currentPeriod.start_date,
+      periodEnd: currentPeriod.end_date,
+    })
+      .filter(
+        (candidate) =>
+          candidate.account_id === statement.account_id &&
+          candidate.id !== statement.id &&
+          candidate.period_end < statement.period_start,
+      )
+      .flatMap((candidate) =>
+        getBankStatementEntries(candidate.id).map((entry) => ({
+          entry,
+          statementEnd: candidate.period_end,
+        })),
+      )
+      .filter(({ entry }) => entry.document_id != null)
+      .sort((left, right) => {
+        if (right.entry.entry_date !== left.entry.entry_date) {
+          return right.entry.entry_date - left.entry.entry_date;
         }
-      } catch {
-        warnings.push('PDF-tiedoston poisto epäonnistui');
+
+        return right.statementEnd - left.statementEnd;
+      })
+      .flatMap(({ entry }) => {
+        const document = documentSummaryById.get(entry.document_id!);
+        if (!document) return [];
+
+        return [
+          {
+            entryDate: entry.entry_date,
+            amount: entry.amount,
+            counterparty: entry.counterparty,
+            reference: entry.reference,
+            message: entry.message,
+            documentId: document.id,
+            documentNumber: document.number,
+            documentDate: document.date,
+            documentCategory: document.category,
+            documentName: document.name,
+            documentDescriptions: document.descriptions,
+          },
+        ];
+      })
+      .filter((link, index, links) => {
+        const dedupKey = buildLinkHistoryDedupKey(link);
+        return index === links.findIndex((candidate) => buildLinkHistoryDedupKey(candidate) === dedupKey);
+      });
+
+    const suggestions = await suggestBankStatementDocumentLinks({
+      statement: {
+        id: statement.id,
+        accountNumber: statement.account_number,
+        accountName: statement.account_name,
+        periodStart: statement.period_start,
+        periodEnd: statement.period_end,
+      },
+      entries: targetEntries.map((entry) => ({
+        id: entry.id,
+        entryDate: entry.entry_date,
+        amount: entry.amount,
+        counterparty: entry.counterparty,
+        reference: entry.reference,
+        message: entry.message,
+      })),
+      documents: documentSummaries,
+      previousLinkExamples,
+    });
+
+    return {
+      suggestions: suggestions.map((suggestion) => ({
+        ...suggestion,
+        document:
+          suggestion.documentId != null
+            ? documentSummaryById.get(suggestion.documentId) ?? null
+            : null,
+      })),
+    };
+  }, 'AI-ehdotusten haku epäonnistui.');
+}
+
+export async function applyBankStatementDocumentSuggestionsAction(input: unknown) {
+  const parsed = bankStatementAiApplySchema.parse(input);
+
+  return runDbAction(() => {
+    const statement = requireResource(
+      getBankStatement(parsed.statementId),
+      'Tiliotetta ei löydy',
+    );
+    const statementEntryIds = new Set(
+      getBankStatementEntries(parsed.statementId).map((entry) => entry.id),
+    );
+    void statement;
+
+    parsed.links.forEach((link) => {
+      if (!statementEntryIds.has(link.entryId)) {
+        throw new ApiRouteError('Tilioterivi ei kuulu valittuun tiliotteeseen', 400);
       }
-    }
+
+      requireUnlockedBankStatementEntryPeriod(link.entryId);
+      requireResource(getDocument(link.documentId), 'Tositetta ei löytynyt');
+      requireUnlockedDocumentPeriodById(link.documentId);
+      updateBankStatementEntry(link.entryId, {
+        document_id: link.documentId,
+      });
+    });
 
     revalidateApp();
-    return {
-      ok: true,
-      masterStatementId: masterStatement.id,
-      mergedCount: mergedStatements.length,
-      warnings,
-    };
-  }, 'Tiliotteiden yhdistäminen epäonnistui.');
+    return { linked: parsed.links.length };
+  }, 'AI-ehdotusten hyväksyntä epäonnistui.');
 }
 
 export async function deleteBankStatementAction(statementId: number) {

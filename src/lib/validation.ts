@@ -109,14 +109,21 @@ export const bankStatementCreateDocumentsSchema = z.object({
   entryIds: z.array(positiveInt).optional().default([]),
 });
 
-export const bankStatementMergeSchema = z.object({
-  masterStatementId: z
-    .number({ error: 'Virheellinen master-tiliote' })
-    .int({ error: 'Virheellinen master-tiliote' })
-    .positive({ error: 'Virheellinen master-tiliote' }),
-  mergedStatementIds: z
-    .array(positiveInt)
-    .min(1, { error: 'Virheelliset yhdistettävät tiliotteet' }),
+export const bankStatementAiSuggestSchema = z.object({
+  statementId: positiveInt,
+  entryIds: z.array(positiveInt).optional().default([]),
+});
+
+export const bankStatementAiApplySchema = z.object({
+  statementId: positiveInt,
+  links: z
+    .array(
+      z.object({
+        entryId: positiveInt,
+        documentId: positiveInt,
+      }),
+    )
+    .min(1, { error: 'Valitse vähintään yksi AI-ehdotus' }),
 });
 
 export const bankStatementCreateSchema = z.object({

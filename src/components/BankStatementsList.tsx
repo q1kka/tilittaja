@@ -3,12 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GitMerge, Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { formatCurrency, periodLabel } from '@/lib/accounting';
-import {
-  deleteBankStatementAction,
-  mergeBankStatementsAction,
-} from '@/actions/app-actions';
+import { deleteBankStatementAction } from '@/actions/app-actions';
 import type { BankStatementWithStats } from '@/lib/types';
 
 interface Props {
@@ -51,13 +48,8 @@ function getStatus(statement: BankStatementWithStats) {
 export default function BankStatementsList({ statements }: Props) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [masterStatementId, setMasterStatementId] = useState<number | null>(
-    null,
-  );
-  const [isMerging, setIsMerging] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [actionError, setActionError] = useState('');
-  const [actionWarning, setActionWarning] = useState('');
 
   const selectedStatements = useMemo(
     () => statements.filter((statement) => selectedIds.has(statement.id)),
@@ -68,14 +60,6 @@ export default function BankStatementsList({ statements }: Props) {
     statements.length > 0 &&
     statements.every((statement) => selectedIds.has(statement.id));
   const hasSelection = selectedStatements.length > 0;
-  const hasMergeSelection = selectedStatements.length >= 2;
-  const selectionSharesAccount =
-    selectedStatements.length < 2 ||
-    selectedStatements.every(
-      (statement) =>
-        statement.account_id === selectedStatements[0]?.account_id &&
-        statement.iban === selectedStatements[0]?.iban,
-    );
 
   useEffect(() => {
     setSelectedIds((current) => {
@@ -85,25 +69,8 @@ export default function BankStatementsList({ statements }: Props) {
     });
   }, [statements]);
 
-  useEffect(() => {
-    if (selectedStatements.length < 2) {
-      setMasterStatementId(null);
-      return;
-    }
-
-    if (
-      masterStatementId == null ||
-      !selectedStatements.some(
-        (statement) => statement.id === masterStatementId,
-      )
-    ) {
-      setMasterStatementId(selectedStatements[0]?.id ?? null);
-    }
-  }, [masterStatementId, selectedStatements]);
-
   const toggleSelection = (statementId: number) => {
     setActionError('');
-    setActionWarning('');
     setSelectedIds((current) => {
       const next = new Set(current);
       if (next.has(statementId)) {
@@ -117,76 +84,12 @@ export default function BankStatementsList({ statements }: Props) {
 
   const toggleAll = () => {
     setActionError('');
-    setActionWarning('');
     if (allSelected) {
       setSelectedIds(new Set());
       return;
     }
 
     setSelectedIds(new Set(statements.map((statement) => statement.id)));
-  };
-
-  const handleMerge = async () => {
-    if (!hasMergeSelection || masterStatementId == null) {
-      setActionError('Valitse vähintään kaksi tiliotetta ja master-tiliote.');
-      return;
-    }
-
-    if (!selectionSharesAccount) {
-      setActionError('Vain saman pankkitilin tiliotteita voi yhdistää.');
-      return;
-    }
-
-    const mergedStatements = selectedStatements.filter(
-      (statement) => statement.id !== masterStatementId,
-    );
-    const masterStatement = selectedStatements.find(
-      (statement) => statement.id === masterStatementId,
-    );
-
-    if (!masterStatement || mergedStatements.length === 0) {
-      setActionError(
-        'Valitse yksi master ja vähintään yksi yhdistettävä tiliote.',
-      );
-      return;
-    }
-
-    const confirmMessage = [
-      `Yhdistetäänkö ${mergedStatements.length} tiliotetta masteriin ${periodLabel(
-        masterStatement.period_start,
-        masterStatement.period_end,
-      )}?`,
-      '',
-      'Yhdistettävien tiliotteiden kirjaukset siirretään masteriin ja niiden PDF:t poistetaan, jos ne löytyvät.',
-    ].join('\n');
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
-
-    setIsMerging(true);
-    setActionError('');
-    setActionWarning('');
-
-    try {
-      const payload = await mergeBankStatementsAction({
-        masterStatementId,
-        mergedStatementIds: mergedStatements.map((statement) => statement.id),
-      });
-
-      setSelectedIds(new Set());
-      setMasterStatementId(null);
-      setActionWarning(payload?.warnings?.join(' ') || '');
-      router.refresh();
-    } catch (error) {
-      setActionError(
-        error instanceof Error
-          ? error.message
-          : 'Tiliotteiden yhdistäminen epäonnistui.',
-      );
-    } finally {
-      setIsMerging(false);
-    }
   };
 
   const handleDeleteSelected = async () => {
@@ -207,7 +110,6 @@ export default function BankStatementsList({ statements }: Props) {
 
     setIsDeleting(true);
     setActionError('');
-    setActionWarning('');
 
     try {
       for (const statement of selectedStatements) {
@@ -215,7 +117,6 @@ export default function BankStatementsList({ statements }: Props) {
       }
 
       setSelectedIds(new Set());
-      setMasterStatementId(null);
       router.refresh();
     } catch (error) {
       setActionError(
@@ -230,16 +131,11 @@ export default function BankStatementsList({ statements }: Props) {
 
   return (
     <div>
-      {(hasSelection || actionError || actionWarning) && (
+      {(hasSelection || actionError) && (
         <div className="mb-4 rounded-xl border border-border-subtle bg-surface-2/50 p-4">
           {actionError && (
             <div className="mb-3 rounded-lg border border-red-700/50 bg-red-900/20 px-4 py-3 text-sm text-rose-300">
               {actionError}
-            </div>
-          )}
-          {actionWarning && (
-            <div className="mb-3 rounded-lg border border-yellow-700/50 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-200">
-              {actionWarning}
             </div>
           )}
 
@@ -251,14 +147,14 @@ export default function BankStatementsList({ statements }: Props) {
                     {selectedStatements.length} tiliotetta valittu
                   </div>
                   <div className="text-xs text-text-secondary mt-1">
-                    Poista valitut kerralla tai yhdistä ne yhdeksi tiliotteeksi.
+                    Poista valitut tiliotteet kerralla.
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={handleDeleteSelected}
-                    disabled={isDeleting || isMerging}
+                    disabled={isDeleting}
                     className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-text-muted"
                   >
                     {isDeleting ? (
@@ -268,75 +164,8 @@ export default function BankStatementsList({ statements }: Props) {
                     )}
                     Poista valitut
                   </button>
-                  {hasMergeSelection && (
-                    <button
-                      type="button"
-                      onClick={handleMerge}
-                      disabled={
-                        isMerging || isDeleting || !selectionSharesAccount
-                      }
-                      className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-text-muted"
-                    >
-                      {isMerging ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <GitMerge className="h-4 w-4" />
-                      )}
-                      Yhdistä valitut
-                    </button>
-                  )}
                 </div>
               </div>
-
-              {hasMergeSelection && !selectionSharesAccount && (
-                <div className="rounded-lg border border-red-700/50 bg-red-900/20 px-4 py-3 text-sm text-rose-300">
-                  Valitut tiliotteet eivät kuulu samalle pankkitilille, joten
-                  niitä ei voi yhdistää.
-                </div>
-              )}
-
-              {hasMergeSelection && (
-                <div className="space-y-3">
-                  <div className="text-xs text-text-secondary">
-                    Valitse mikä tiliote jää masteriksi. Muut valitut siirretään
-                    siihen.
-                  </div>
-                  <div className="grid gap-2 md:grid-cols-2">
-                    {selectedStatements.map((statement) => {
-                      const label = periodLabel(
-                        statement.period_start,
-                        statement.period_end,
-                      );
-                      return (
-                        <label
-                          key={statement.id}
-                          className="flex items-start gap-3 rounded-lg border border-border-subtle/60 bg-surface-0/40 px-4 py-3 text-sm"
-                        >
-                          <input
-                            type="radio"
-                            name="masterStatementId"
-                            checked={masterStatementId === statement.id}
-                            onChange={() => setMasterStatementId(statement.id)}
-                            className="mt-0.5 h-4 w-4"
-                          />
-                          <span className="min-w-0">
-                            <span className="block font-medium text-text-primary">
-                              {label}
-                            </span>
-                            <span className="block text-xs text-text-secondary mt-1">
-                              {statement.account_number}{' '}
-                              {statement.account_name}
-                            </span>
-                            <span className="block text-xs text-text-muted mt-1">
-                              {statement.entry_count} riviä
-                            </span>
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>

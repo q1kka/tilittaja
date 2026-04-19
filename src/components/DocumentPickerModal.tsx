@@ -29,7 +29,7 @@ export interface DocumentPickerModalProps {
   documentSearch: string;
   onDocumentSearchChange: (value: string) => void;
   filteredDocuments: DocumentOption[];
-  availableDocumentCount: number;
+  documentCount: number;
   modalSelectedDocumentId: number | null;
   onSelectDocument: (id: number) => void;
   selectedDocument: DocumentOption | null;
@@ -45,7 +45,7 @@ export default function DocumentPickerModal({
   documentSearch,
   onDocumentSearchChange,
   filteredDocuments,
-  availableDocumentCount,
+  documentCount,
   modalSelectedDocumentId,
   onSelectDocument,
   selectedDocument,
@@ -156,8 +156,7 @@ export default function DocumentPickerModal({
 
             <div className="mt-3 flex items-center justify-between gap-3">
               <div className="text-xs text-text-muted">
-                {filteredDocuments.length} / {availableDocumentCount} vapaata
-                tositetta
+                {filteredDocuments.length} / {documentCount} tositetta
               </div>
               <button
                 type="button"

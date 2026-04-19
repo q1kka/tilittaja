@@ -39,7 +39,8 @@ export {
 export {
   updateBankStatementEntryDocumentAction,
   createBankStatementDocumentsAction,
-  mergeBankStatementsAction,
+  suggestBankStatementDocumentLinksAction,
+  applyBankStatementDocumentSuggestionsAction,
   deleteBankStatementAction,
   createBankStatementManualAction,
 } from './bank-statement-actions';

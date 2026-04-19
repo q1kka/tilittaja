@@ -24,7 +24,6 @@ const dbMocks = vi.hoisted(() => ({
   requireCurrentDataSource: vi.fn(),
   resolveDbPath: vi.fn(),
   closeDbConnection: vi.fn(),
-  mergeBankStatements: vi.fn(),
   getBankStatement: vi.fn(),
   getBankStatementEntries: vi.fn(),
   getSettings: vi.fn(),
@@ -93,7 +92,6 @@ import {
   saveDocumentEntriesAction,
   duplicateDocumentAction,
   createVatSettlementAction,
-  mergeBankStatementsAction,
   importStateTransferAction,
   deleteDocumentAction,
   deleteDocumentsAction,
@@ -397,27 +395,6 @@ describe('createVatSettlementAction', () => {
     await expect(
       createVatSettlementAction({ periodId: 1, date: Date.UTC(2025, 0, 31) }),
     ).rejects.toThrow('siirrettävää saldoa');
-  });
-});
-
-describe('mergeBankStatementsAction', () => {
-  it('merges bank statements and returns result', async () => {
-    dbMocks.mergeBankStatements.mockReturnValue({
-      masterStatement: { id: 1, source_file: null },
-      mergedStatements: [{ id: 2, source_file: null }],
-    });
-
-    const result = await mergeBankStatementsAction({
-      masterStatementId: 1,
-      mergedStatementIds: [2],
-    });
-
-    expect(result.ok).toBe(true);
-    expect(result.mergedCount).toBe(1);
-    expect(dbMocks.mergeBankStatements).toHaveBeenCalledWith({
-      masterStatementId: 1,
-      mergedStatementIds: [2],
-    });
   });
 });
 

@@ -3,8 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import {
   getBankStatement,
   getBankStatementEntries,
-  getAccounts,
   getDocuments,
+  getDocumentMetadataMap,
   getEntriesForPeriod,
   getDocumentReceiptLinks,
   getPeriods,
@@ -19,6 +19,7 @@ import {
   resolveDocumentReceiptsForSource,
   buildEntryDescriptionsByDocumentId,
 } from '@/lib/receipt-resolution';
+import { buildBankStatementDocumentOptions } from '@/lib/bank-statement-document-options';
 import { notFound } from 'next/navigation';
 import BankStatementEntries from '@/components/BankStatementEntries';
 import type { Metadata } from 'next';
@@ -40,29 +41,34 @@ export default async function BankStatementDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const { entries, accounts, settings, periods } = await runWithResolvedDb(
+  const { entries, settings, periods } = await runWithResolvedDb(
     () => ({
       entries: getBankStatementEntries(statementId),
-      accounts: getAccounts(),
       settings: getSettings(),
       periods: getPeriods(),
     }),
   );
-  const currentPeriod =
-    periods.find((period) => period.id === settings.current_period_id) ??
-    periods[0];
-  const { documents, documentEntries, manualReceiptLinks } =
+  const statementPeriod =
+    periods.find(
+      (period) =>
+        period.start_date <= statement.period_start &&
+        period.end_date >= statement.period_end,
+    ) ?? periods[0];
+  const { documents, documentEntries, documentMetadataMap, manualReceiptLinks } =
     await runWithResolvedDb(() => {
-      const currentDocuments = getDocuments(settings.current_period_id);
+      const currentDocuments = getDocuments(statementPeriod.id);
       return {
         documents: currentDocuments,
-        documentEntries: getEntriesForPeriod(settings.current_period_id),
+        documentEntries: getEntriesForPeriod(statementPeriod.id),
+        documentMetadataMap: getDocumentMetadataMap(
+          currentDocuments.map((doc) => doc.id),
+        ),
         manualReceiptLinks: getDocumentReceiptLinks(
           currentDocuments.map((doc) => doc.id),
         ),
       };
     });
-  const periodLocked = currentPeriod?.locked ?? false;
+  const periodLocked = statementPeriod?.locked ?? false;
 
   const firstDescriptionByDocumentId = new Map<number, string>();
   for (const entry of documentEntries) {
@@ -86,6 +92,12 @@ export default async function BankStatementDetailPage({ params }: PageProps) {
     documents,
     entryDescriptionsByDocumentId,
     manualReceiptLinks,
+  });
+  const documentOptions = buildBankStatementDocumentOptions({
+    documents,
+    metadataMap: documentMetadataMap,
+    firstEntryDescriptionByDocumentId: firstDescriptionByDocumentId,
+    receiptMap,
   });
   const hasStatementPdf = Boolean(
     statement.source_file &&
@@ -164,7 +176,7 @@ export default async function BankStatementDetailPage({ params }: PageProps) {
 
           <BankStatementEntries
             statementId={statementId}
-            periodId={settings.current_period_id}
+            periodId={statementPeriod.id}
             periodLocked={periodLocked}
             entries={entries.map((e) => ({
               id: e.id,
@@ -180,25 +192,7 @@ export default async function BankStatementDetailPage({ params }: PageProps) {
               counterpart_account_number: e.counterpart_account_number,
               counterpart_account_name: e.counterpart_account_name,
             }))}
-            accounts={accounts.map((a) => ({
-              id: a.id,
-              number: a.number,
-              name: a.name,
-              type: a.type,
-              vat_percentage: a.vat_percentage,
-            }))}
-            documents={documents.map((document) => {
-              const receipt = receiptMap.get(document.id);
-              return {
-                id: document.id,
-                number: document.number,
-                date: document.date,
-                description:
-                  firstDescriptionByDocumentId.get(document.id) ?? '',
-                receiptPath: receipt?.path ?? null,
-                receiptSource: receipt?.source ?? null,
-              };
-            })}
+            documents={documentOptions}
           />
         </div>
 

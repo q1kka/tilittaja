@@ -30,7 +30,6 @@ import {
   createBankStatementEntry,
   ensureBankStatementTables,
   deleteBankStatement,
-  mergeBankStatements,
   updateBankStatementEntry,
   createDocumentsFromBankStatementEntries,
   bankStatementArchiveIdExists,
@@ -335,119 +334,6 @@ describe('bank-statements', () => {
 
     it('returns false for non-existent statement', () => {
       expect(deleteBankStatement(9999)).toBe(false);
-    });
-  });
-
-  describe('mergeBankStatements', () => {
-    it('merges entries into master and deletes merged statements', () => {
-      const bs1 = createBankStatement({
-        account_id: 1,
-        iban: 'FI1234',
-        period_start: 100,
-        period_end: 200,
-        opening_balance: 1000,
-        closing_balance: 1500,
-        source_file: '',
-      });
-      const bs2 = createBankStatement({
-        account_id: 1,
-        iban: 'FI1234',
-        period_start: 200,
-        period_end: 300,
-        opening_balance: 1500,
-        closing_balance: 2000,
-        source_file: '',
-      });
-      createBankStatementEntry({
-        bank_statement_id: bs2.id,
-        entry_date: 250,
-        value_date: 250,
-        archive_id: '',
-        counterparty: 'Y',
-        counterparty_iban: null,
-        reference: null,
-        message: null,
-        payment_type: '',
-        transaction_number: 1,
-        amount: 500,
-        counterpart_account_id: null,
-      });
-
-      const result = mergeBankStatements({
-        masterStatementId: bs1.id,
-        mergedStatementIds: [bs2.id],
-      });
-      expect(result.mergedStatements).toHaveLength(1);
-      expect(getBankStatement(bs2.id)).toBeUndefined();
-
-      const entries = getBankStatementEntries(bs1.id);
-      expect(entries).toHaveLength(1);
-    });
-
-    it('throws when merging empty list', () => {
-      const bs = createBankStatement({
-        account_id: 1,
-        iban: 'FI1234',
-        period_start: 100,
-        period_end: 200,
-        opening_balance: 0,
-        closing_balance: 0,
-        source_file: '',
-      });
-      expect(() =>
-        mergeBankStatements({
-          masterStatementId: bs.id,
-          mergedStatementIds: [],
-        }),
-      ).toThrow('Valitse vähintään yksi');
-    });
-
-    it('throws when merging master into itself', () => {
-      const bs = createBankStatement({
-        account_id: 1,
-        iban: 'FI1234',
-        period_start: 100,
-        period_end: 200,
-        opening_balance: 0,
-        closing_balance: 0,
-        source_file: '',
-      });
-      expect(() =>
-        mergeBankStatements({
-          masterStatementId: bs.id,
-          mergedStatementIds: [bs.id],
-        }),
-      ).toThrow('itseensä');
-    });
-
-    it('throws when accounts differ', () => {
-      db.prepare(
-        "INSERT INTO account (id, number, name, type) VALUES (10, '1920', 'Toinen tili', 0)",
-      ).run();
-      const bs1 = createBankStatement({
-        account_id: 1,
-        iban: 'FI1234',
-        period_start: 100,
-        period_end: 200,
-        opening_balance: 0,
-        closing_balance: 0,
-        source_file: '',
-      });
-      const bs2 = createBankStatement({
-        account_id: 10,
-        iban: 'FI5678',
-        period_start: 200,
-        period_end: 300,
-        opening_balance: 0,
-        closing_balance: 0,
-        source_file: '',
-      });
-      expect(() =>
-        mergeBankStatements({
-          masterStatementId: bs1.id,
-          mergedStatementIds: [bs2.id],
-        }),
-      ).toThrow('saman pankkitilin');
     });
   });
 

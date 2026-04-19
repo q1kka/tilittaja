@@ -1,5 +1,4 @@
 import {
-  BankStatement,
   BankStatementEntry,
   BankStatementWithStats,
   BankStatementEntryWithAccount,
@@ -294,112 +293,6 @@ export function deleteBankStatement(statementId: number): boolean {
 
   deleteInTransaction(statementId);
   return true;
-}
-
-export function mergeBankStatements(params: {
-  masterStatementId: number;
-  mergedStatementIds: number[];
-}): {
-  masterStatement: BankStatement;
-  mergedStatements: BankStatement[];
-} {
-  const db = getDb();
-  const mergedIds = [...new Set(params.mergedStatementIds)];
-
-  if (mergedIds.length === 0) {
-    throw new Error(
-      'Valitse vähintään yksi tiliote yhdistettäväksi masteriin.',
-    );
-  }
-
-  if (mergedIds.includes(params.masterStatementId)) {
-    throw new Error('Master-tiliotetta ei voi yhdistää itseensä.');
-  }
-
-  const allIds = [params.masterStatementId, ...mergedIds];
-  const statements = db
-    .prepare(
-      `SELECT *
-       FROM bank_statement
-       WHERE id IN (${allIds.map(() => '?').join(',')})`,
-    )
-    .all(...allIds) as BankStatement[];
-
-  if (statements.length !== allIds.length) {
-    throw new Error('Kaikkia valittuja tiliotteita ei löytynyt.');
-  }
-
-  const masterStatement = statements.find(
-    (statement) => statement.id === params.masterStatementId,
-  );
-  if (!masterStatement) {
-    throw new Error('Master-tiliotetta ei löytynyt.');
-  }
-
-  const mergedStatements = statements.filter(
-    (statement) => statement.id !== params.masterStatementId,
-  );
-
-  const sameAccount = statements.every(
-    (statement) => statement.account_id === masterStatement.account_id,
-  );
-  const sameIban = statements.every(
-    (statement) => statement.iban === masterStatement.iban,
-  );
-
-  if (!sameAccount || !sameIban) {
-    throw new Error('Vain saman pankkitilin tiliotteita voi yhdistää.');
-  }
-
-  const sortedByPeriod = [...statements].sort((a, b) => {
-    if (a.period_start !== b.period_start)
-      return a.period_start - b.period_start;
-    if (a.period_end !== b.period_end) return a.period_end - b.period_end;
-    return a.id - b.id;
-  });
-
-  const firstStatement = sortedByPeriod[0];
-  const lastStatement = [...sortedByPeriod].sort((a, b) => {
-    if (a.period_end !== b.period_end) return b.period_end - a.period_end;
-    if (a.period_start !== b.period_start)
-      return b.period_start - a.period_start;
-    return b.id - a.id;
-  })[0];
-
-  const mergeInTransaction = db.transaction(() => {
-    db.prepare(
-      `UPDATE bank_statement_entry
-       SET bank_statement_id = ?
-       WHERE bank_statement_id IN (${mergedIds.map(() => '?').join(',')})`,
-    ).run(params.masterStatementId, ...mergedIds);
-
-    db.prepare(
-      `UPDATE bank_statement
-       SET period_start = ?,
-           period_end = ?,
-           opening_balance = ?,
-           closing_balance = ?
-       WHERE id = ?`,
-    ).run(
-      firstStatement.period_start,
-      lastStatement.period_end,
-      firstStatement.opening_balance,
-      lastStatement.closing_balance,
-      params.masterStatementId,
-    );
-
-    db.prepare(
-      `DELETE FROM bank_statement
-       WHERE id IN (${mergedIds.map(() => '?').join(',')})`,
-    ).run(...mergedIds);
-  });
-
-  mergeInTransaction();
-
-  return {
-    masterStatement,
-    mergedStatements,
-  };
 }
 
 export function updateBankStatementEntry(

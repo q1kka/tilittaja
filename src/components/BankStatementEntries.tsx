@@ -3,17 +3,20 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, FileText, Loader2, Unlink } from 'lucide-react';
+import { Check, Loader2, Sparkles, Unlink } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/accounting';
 import {
-  createBankStatementDocumentsAction,
+  applyBankStatementDocumentSuggestionsAction,
+  suggestBankStatementDocumentLinksAction,
   updateBankStatementEntryDocumentAction,
 } from '@/actions/app-actions';
 import { buildDocumentListHref } from '@/lib/document-links';
 import { buildPdfPreviewSrc } from '@/lib/pdf-preview';
-import type { AccountOption } from '@/lib/types';
 import DocumentPickerModal from '@/components/DocumentPickerModal';
 import type { DocumentOption } from '@/components/DocumentPickerModal';
+import BankStatementAiLinkModal, {
+  type BankStatementAiLinkSuggestion,
+} from '@/components/BankStatementAiLinkModal';
 
 interface EntryData {
   id: number;
@@ -35,7 +38,6 @@ interface Props {
   periodId: number;
   periodLocked: boolean;
   entries: EntryData[];
-  accounts?: AccountOption[];
   documents: DocumentOption[];
 }
 
@@ -47,19 +49,9 @@ export default function BankStatementEntries({
   documents,
 }: Props) {
   const router = useRouter();
-  const [selectedAccountIds, setSelectedAccountIds] = useState<
-    Map<number, number | null>
-  >(() => {
-    const map = new Map<number, number | null>();
-    entries.forEach((e) => {
-      map.set(e.id, e.counterpart_account_id);
-    });
-    return map;
-  });
   const [selectedEntries, setSelectedEntries] = useState<Set<number>>(() => {
     return new Set(entries.filter((e) => !e.document_id).map((e) => e.id));
   });
-  const [creating, setCreating] = useState(false);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<
     Map<number, number | null>
   >(() => {
@@ -78,16 +70,18 @@ export default function BankStatementEntries({
   const [modalSelectedDocumentId, setModalSelectedDocumentId] = useState<
     number | null
   >(null);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiApplying, setAiApplying] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiSuggestions, setAiSuggestions] = useState<
+    BankStatementAiLinkSuggestion[]
+  >([]);
+  const [aiSelectedEntryIds, setAiSelectedEntryIds] = useState<Set<number>>(
+    new Set(),
+  );
 
   useEffect(() => {
-    setSelectedAccountIds(() => {
-      const map = new Map<number, number | null>();
-      entries.forEach((entry) => {
-        map.set(entry.id, entry.counterpart_account_id);
-      });
-      return map;
-    });
-
     setSelectedDocumentIds(() => {
       const map = new Map<number, number | null>();
       entries.forEach((entry) => {
@@ -127,26 +121,7 @@ export default function BankStatementEntries({
     return selectedDocumentIds.get(documentPickerEntryId) ?? null;
   }, [documentPickerEntryId, selectedDocumentIds]);
 
-  const availableDocuments = useMemo(() => {
-    const reservedDocumentIds = new Set<number>();
-
-    selectedDocumentIds.forEach((selectedDocumentId, entryId) => {
-      if (selectedDocumentId == null) return;
-      if (entryId === documentPickerEntryId) return;
-      reservedDocumentIds.add(selectedDocumentId);
-    });
-
-    return sortedDocuments.filter(
-      (document) =>
-        !reservedDocumentIds.has(document.id) ||
-        document.id === currentPickerDocumentId,
-    );
-  }, [
-    currentPickerDocumentId,
-    documentPickerEntryId,
-    selectedDocumentIds,
-    sortedDocuments,
-  ]);
+  const availableDocuments = sortedDocuments;
 
   const filteredDocuments = useMemo(() => {
     const query = documentSearch.trim().toLowerCase();
@@ -331,36 +306,129 @@ export default function BankStatementEntries({
     }
   };
 
-  const handleCreateDocuments = async () => {
-    if (periodLocked) {
+  const selectedUnprocessedEntryIds = unprocessedEntryIds.filter((id) =>
+    selectedEntries.has(id),
+  );
+
+  const closeAiModal = (force = false) => {
+    if (aiApplying && !force) return;
+    setAiModalOpen(false);
+    setAiError('');
+    setAiSuggestions([]);
+    setAiSelectedEntryIds(new Set());
+    setAiLoading(false);
+  };
+
+  const loadAiSuggestions = async () => {
+    if (selectedUnprocessedEntryIds.length === 0) {
+      setAiError('Valitse vähintään yksi käsittelemätön rivi yhdistettäväksi.');
+      setAiSuggestions([]);
+      setAiSelectedEntryIds(new Set());
       return;
     }
 
-    const idsWithAccounts = [...selectedEntries].filter((id) => {
-      const accountId = selectedAccountIds.get(id);
-      return accountId != null;
-    });
+    setAiLoading(true);
+    setAiError('');
+    setAiSuggestions([]);
 
-    if (idsWithAccounts.length === 0) return;
-
-    setCreating(true);
     try {
-      await createBankStatementDocumentsAction({
+      const result = await suggestBankStatementDocumentLinksAction({
         statementId,
-        entryIds: idsWithAccounts,
+        entryIds: selectedUnprocessedEntryIds,
       });
-      router.refresh();
+      setAiSuggestions(result.suggestions);
+      setAiSelectedEntryIds(
+        new Set(
+          result.suggestions
+            .filter((suggestion) => suggestion.document != null)
+            .map((suggestion) => suggestion.entryId),
+        ),
+      );
+    } catch (error) {
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : 'AI-ehdotusten haku epäonnistui.',
+      );
     } finally {
-      setCreating(false);
+      setAiLoading(false);
     }
   };
 
-  const readyToCreate = [...selectedEntries].filter((id) => {
-    const entry = entries.find((e) => e.id === id);
-    if (!entry || getCurrentDocumentId(entry.id, entry.document_id) != null)
-      return false;
-    return selectedAccountIds.get(id) != null;
-  }).length;
+  const openAiModal = () => {
+    if (periodLocked) return;
+    if (selectedUnprocessedEntryIds.length === 0) {
+      setActionError('Valitse vähintään yksi käsittelemätön rivi yhdistettäväksi.');
+      return;
+    }
+
+    setActionError('');
+    setAiModalOpen(true);
+    void loadAiSuggestions();
+  };
+
+  const toggleAiSuggestion = (entryId: number) => {
+    setAiSelectedEntryIds((current) => {
+      const next = new Set(current);
+      if (next.has(entryId)) next.delete(entryId);
+      else next.add(entryId);
+      return next;
+    });
+  };
+
+  const toggleAllAiSuggestions = () => {
+    const suggestionIds = aiSuggestions
+      .filter((suggestion) => suggestion.document != null)
+      .map((suggestion) => suggestion.entryId);
+    const allSelected =
+      suggestionIds.length > 0 &&
+      suggestionIds.every((entryId) => aiSelectedEntryIds.has(entryId));
+
+    setAiSelectedEntryIds(allSelected ? new Set() : new Set(suggestionIds));
+  };
+
+  const handleApplyAiSuggestions = async () => {
+    const links = aiSuggestions
+      .filter(
+        (suggestion) =>
+          suggestion.document != null &&
+          aiSelectedEntryIds.has(suggestion.entryId),
+      )
+      .map((suggestion) => ({
+        entryId: suggestion.entryId,
+        documentId: suggestion.document!.id,
+      }));
+
+    if (links.length === 0) {
+      setAiError('Valitse vähintään yksi AI-ehdotus hyväksyttäväksi.');
+      return;
+    }
+
+    setAiApplying(true);
+    setAiError('');
+
+    try {
+      await applyBankStatementDocumentSuggestionsAction({
+        statementId,
+        links,
+      });
+      setSelectedEntries((current) => {
+        const next = new Set(current);
+        links.forEach((link) => next.delete(link.entryId));
+        return next;
+      });
+      closeAiModal(true);
+      router.refresh();
+    } catch (error) {
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : 'AI-ehdotusten hyväksyntä epäonnistui.',
+      );
+    } finally {
+      setAiApplying(false);
+    }
+  };
 
   return (
     <div>
@@ -380,25 +448,23 @@ export default function BankStatementEntries({
       {unprocessedCount > 0 && (
         <div className="flex items-center justify-between mb-4">
           <div className="text-sm text-text-secondary">
-            {readyToCreate} / {unprocessedCount} valittu luotavaksi
+            {selectedUnprocessedEntryIds.length} / {unprocessedCount} valittu
+            yhdistettäväksi
           </div>
           <button
-            onClick={handleCreateDocuments}
-            disabled={periodLocked || creating || readyToCreate === 0}
+            type="button"
+            onClick={openAiModal}
+            disabled={periodLocked || selectedUnprocessedEntryIds.length === 0}
             className="flex items-center gap-2 bg-accent hover:bg-amber-700 disabled:bg-surface-3 disabled:text-text-muted text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            {creating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileText className="w-4 h-4" />
-            )}
-            Luo tositteet ({readyToCreate})
+            <Sparkles className="w-4 h-4" />
+            Yhdistä tositteisiin (AI)
           </button>
         </div>
       )}
 
-      <div className="bg-surface-2/50 border border-border-subtle rounded-xl overflow-hidden">
-        <table className="w-full">
+      <div className="bg-surface-2/50 border border-border-subtle rounded-xl overflow-x-auto">
+        <table className="w-full table-fixed">
           <thead>
             <tr className="border-b border-border-subtle">
               {unprocessedCount > 0 && (
@@ -465,12 +531,12 @@ export default function BankStatementEntries({
                   <td className="px-3 py-1.5 text-xs text-text-secondary tabular-nums whitespace-nowrap">
                     {formatDate(entry.entry_date)}
                   </td>
-                  <td className="px-3 py-1.5">
-                    <div className="text-xs text-text-primary truncate">
+                  <td className="px-3 py-1.5 min-w-0">
+                    <div className="truncate text-xs text-text-primary">
                       {entry.counterparty}
                     </div>
                     {description && (
-                      <div className="text-[11px] text-text-muted truncate">
+                      <div className="truncate text-[11px] text-text-muted">
                         {description}
                       </div>
                     )}
@@ -511,16 +577,16 @@ export default function BankStatementEntries({
                         </button>
                       </div>
                     ) : (
-                      <div className="relative">
+                      <div className="relative flex justify-end">
                         <button
                           type="button"
                           onClick={() => openDocumentPicker(entry.id)}
                           disabled={periodLocked}
-                          className="w-full rounded-md border border-border-subtle bg-surface-0/60 px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-0/80"
+                          className="inline-flex min-w-[110px] items-center justify-center rounded-md border border-border-subtle bg-surface-0/60 px-3 py-1 text-xs text-text-primary hover:bg-surface-0/80"
                         >
                           {currentDocumentId
                             ? `#${entry.document_number ?? currentDocumentId}`
-                            : 'Liitä'}
+                            : 'Liitä tosite'}
                         </button>
                         {linkingEntryId === entry.id && (
                           <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-accent animate-spin" />
@@ -547,7 +613,7 @@ export default function BankStatementEntries({
           documentSearch={documentSearch}
           onDocumentSearchChange={setDocumentSearch}
           filteredDocuments={filteredDocuments}
-          availableDocumentCount={availableDocuments.length}
+          documentCount={availableDocuments.length}
           modalSelectedDocumentId={modalSelectedDocumentId}
           onSelectDocument={setModalSelectedDocumentId}
           selectedDocument={selectedModalDocument}
@@ -555,6 +621,23 @@ export default function BankStatementEntries({
           linking={linkingEntryId === documentPickerEntry.id}
           onLink={handleLinkSelectedDocument}
           onClose={closeDocumentPicker}
+        />
+      )}
+
+      {aiModalOpen && (
+        <BankStatementAiLinkModal
+          entries={entries}
+          periodId={periodId}
+          suggestions={aiSuggestions}
+          loading={aiLoading}
+          loadError={aiError}
+          applying={aiApplying}
+          selectedEntryIds={aiSelectedEntryIds}
+          onToggleEntry={toggleAiSuggestion}
+          onToggleAll={toggleAllAiSuggestions}
+          onRefresh={() => void loadAiSuggestions()}
+          onApply={() => void handleApplyAiSuggestions()}
+          onClose={closeAiModal}
         />
       )}
     </div>
