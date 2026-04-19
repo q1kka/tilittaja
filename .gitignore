@@ -17,6 +17,9 @@
 /blob-report/
 /playwright/.cache/
 
+# local artifacts (db backups, recordings, ad-hoc exports)
+/artifacts/
+
 # next.js
 /.next/
 /out/
